@@ -39,10 +39,10 @@ void tampilkan_barang();
 
 Barang br;
 
-int main() {
-	tambah_barang();
-	tampilkan_barang();
-}
+// int main() {
+// 	tambah_barang();
+// 	tampilkan_barang();
+// }
 
 bool is_kosong() {
     return head == NULL;
@@ -150,4 +150,236 @@ void tampilkan_barang() {
         current = current->next;
     }
     cout << string(100, '=') << endl;      
+}
+
+// Fitur Mengahapus barang 
+void hapus_barang() {
+    if (is_kosong()) {
+        cout << "List barang kosong.\n";
+        return;
+    }
+
+    string kode;
+    char konfirmasi;
+
+    cout << "\nMasukkan kode barang yang ingin dihapus: ";
+    cin >> kode;
+
+    NodeBarang* current = head;
+    NodeBarang* prev = NULL;
+
+    while (current != NULL && current->data.kode_barang != kode) {
+        prev = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        cout << "Barang dengan kode " << kode << " tidak ditemukan.\n";
+        return;
+    }
+
+    // tampilkan barang yang akan dihapus
+    cout << "\nData yang akan dihapus:\n";
+    cout << "Kode       : " << current->data.kode_barang << endl;
+    cout << "Nama       : " << current->data.nama << endl;
+    cout << "Stok       : " << current->data.stok << endl;
+    cout << "Harga      : Rp" << current->data.harga_jual << endl;
+
+    cout << "\nYakin ingin menghapus? (Y/n): ";
+    cin >> konfirmasi;
+
+    if (konfirmasi == 'Y' || konfirmasi == 'y') {
+        if (current == head) {
+            head = head->next;
+            if (head == NULL) {
+                tail = NULL;
+            }
+        } 
+        else {
+            prev->next = current->next;
+
+            if (current == tail) {
+                tail = prev;
+            }
+        }
+
+        delete current;
+        cout << "Barang berhasil dihapus.\n";
+    } 
+    if(konfirmasi == 'n' || konfirmasi == 'N') {
+        cout << "Penghapusan dibatalkan.\n";
+    }
+    else{
+        cout <<"tidak valid hanya boleh y/n\n";
+    }
+}
+// FItur Mencari barang
+void cari_barang() {
+    if (is_kosong()) {
+        cout << "List barang kosong.\n";
+        return;
+    }
+
+    int opsi;
+    cout << "Cari barang berdasarkan:\n";
+    cout << "1. Kode Barang\n";
+    cout << "2. Nama Barang\n";
+    cout << "Pilih mana: ";
+    cin >> opsi;
+    cin.ignore();
+
+    NodeBarang* current = head;
+
+    if (opsi == 1) {
+        string kode;
+        cout << "\nMasukkan kode barang yang ingin dicari: ";
+        cin >> kode;
+
+        while (current != NULL && current->data.kode_barang != kode) {
+            current = current->next;
+        }
+    }
+    else if (opsi == 2) {
+        string cari;
+        cout << "\nMasukkan nama yang ingin dicari: ";
+        getline(cin, cari);
+
+        while (current != NULL && current->data.nama != cari) {
+            current = current->next;
+        }
+    }
+    else {
+        cout << "Tidak valid! Harus berupa angka 1/2\n";
+        return;
+    }
+
+    if (current == NULL) {
+        cout << "Barang tidak ditemukan.\n";
+        return;
+    }
+
+    cout << "\nData yang dicari:\n";
+    cout << "Kode               : " << current->data.kode_barang << endl;
+    cout << "Nama               : " << current->data.nama << endl;
+    cout << "Stok               : " << current->data.stok << endl;
+    cout << "Kategori           : " << current->data.kategori << endl;
+    cout << "Supplier           : " << current->data.supplier << endl;
+    cout << "Tgl Kadaluarsa     : " << current->data.tanggal_kadaluarsa << endl;
+    cout << "Harga              : Rp" << current->data.harga_jual << endl;
+    cout << "Satuan             : " << current->data.satuan << endl;
+}
+
+// Fitur Update Barang
+void update_barang(){
+    if (is_kosong() == 1){
+        cout << "Tidak ada barang yang dapat diupdate.\n";
+    }
+    else{
+        string kode;
+        cout << "\nKode barang yang ingin diupdate: ";
+        cin >> kode;
+        cin.ignore();
+
+        NodeBarang *current;
+        current = head;
+
+        while (current != NULL){
+            if (current->data.kode_barang == kode){
+                break;
+            }
+            current = current->next;
+        }
+
+        if (current == NULL){
+            cout << "Barang tidak ditemukan.\n";
+        }
+        else{
+            int pilih;
+            while (true){
+                cout << "\nData ditemukan!";
+                cout << "\n1. Update Nama";
+                cout << "\n2. Update Kategori";
+                cout << "\n3. Update Harga Jual";
+                cout << "\n4. Update Stok";
+                cout << "\nPilih: ";
+                cin >> pilih;
+                cin.ignore();
+
+                if (pilih >= 1 && pilih <= 4){
+                    break;
+                }
+                else{
+                    cout << "\n Pilihan tidak valid, silakan coba lagi!";
+                }
+            }
+
+            if (pilih == 1){
+                cout << "\nNama baru: ";
+                getline(cin, current->data.nama);
+            }
+            else if (pilih == 2){
+                cout << "\nKategori baru: ";
+                getline(cin, current->data.kategori);
+            }
+            else if (pilih == 3){
+                cout << "\nHarga jual baru: ";
+                cin >> current->data.harga_jual;
+            }
+            else if (pilih == 4){
+                int tambah;
+                cout << "\nTambah stok: ";
+                cin >> tambah;
+                current->data.stok = current->data.stok + tambah;
+            }
+
+            cout << "\nData berhasil diupdate!";
+        }
+    }
+}
+
+int main() {
+    int pilihan;
+
+    while (true) {
+        cout << "===   SISTEM MANAJEMEN STOK   ===" << endl;
+        cout << "1. Tambah Barang" << endl;
+        cout << "2. Tampilkan Barang" << endl;
+        cout << "3. Hapus Barang" << endl;
+        cout << "4. Update Barang" << endl;
+        cout << "5. Cari Barang"<<endl;
+        cout << "6. Fitur LOG barang"<<endl;
+        cout << "0. Keluar" << endl;
+        cout << "--------------------------------------------"<<endl;
+        cout << "Pilih menu: ";
+        cin >> pilihan;
+        cin.ignore();
+
+        if (pilihan == 1) {
+            tambah_barang();
+        }
+        else if (pilihan == 2) {
+            tampilkan_barang();
+        }
+        else if (pilihan == 3) {
+            hapus_barang();
+        }
+        else if (pilihan == 4){
+            update_barang();
+        }
+        else if (pilihan == 5){
+            cari_barang();
+
+        }else if (pilihan == 6){
+            
+        }
+        else if (pilihan == 0) {
+            cout << "Terima kasih!.\n";
+            break;
+        }
+        else {
+            cout << "Pilihan tidak valid.\n";
+        }
+    }
+
+    return 0;
 }
