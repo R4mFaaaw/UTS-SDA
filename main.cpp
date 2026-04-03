@@ -217,38 +217,36 @@ void hapus_barang() {
 int main() {
     int pilihan;
 
-    while (true) {
-        cout << "===   SISTEM MANAJEMEN STOK   ===" << endl;
-        cout << "1. Tambah Barang" << endl;
-        cout << "2. Tampilkan Barang" << endl;
-        cout << "3. Hapus Barang" << endl;
-        cout << "4. Update Barang" << endl;
-        cout << "0. Keluar" << endl;
-        cout << "--------------------------------------------"<<endl;
-        cout << "Pilih menu: ";
+    do {
+        cout << "\n=====================================\n";
+        cout << " SISTEM MANAJEMEN STOK MINIMARKET\n";
+        cout << "=====================================\n";
+        cout << "1. Tambah Barang\n";
+        cout << "2. Tampilkan Barang\n";
+        cout << "3. Cari Barang\n";
+        cout << "4. Update Barang\n";
+        cout << "5. Hapus Barang\n";
+        cout << "0. Keluar\n";
+        cout << "-------------------------------------\n";
+        cout << "Pilih: ";
+
         cin >> pilihan;
+
+        switch(pilihan) {
+            case 1: tambah_barang(); break;
+            case 2: tampilkan_barang(); break;
+            //case 3: cari_barang(); break;
+            //case 4: update_barang(); break;
+            case 5: hapus_barang(); break;
+            case 0: cout << "Keluar...\n"; break;
+            default: cout << "Salah pilih!\n";
+        }
+
+        cout << "\nTekan ENTER...";
         cin.ignore();
+        cin.get();
 
-        if (pilihan == 1) {
-            tambah_barang();
-        }
-        else if (pilihan == 2) {
-            tampilkan_barang();
-        }
-        else if (pilihan == 3) {
-            hapus_barang();
-        }
-        else if (pilihan == 4){
-
-        }
-        else if (pilihan == 0) {
-            cout << "Terima kasih!.\n";
-            break;
-        }
-        else {
-            cout << "Pilihan tidak valid.\n";
-        }
-    }
+    } while(pilihan != 0);
 
     return 0;
 }
