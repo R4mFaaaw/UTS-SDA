@@ -25,6 +25,64 @@ struct Barang {
     string supplier;
 };
 
+struct LogBarang {
+    string waktu;
+    string aksi;
+    string detail;
+    LogBarang* next;
+    LogBarang* prev;
+};
+
+LogBarang* logHead = NULL;
+LogBarang* logTail = NULL;
+
+void tambah_log(string aksi, string detail) {
+    LogBarang* baru = new LogBarang;
+    
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    string str_waktu(dt);
+    if (!str_waktu.empty() && str_waktu[str_waktu.length()-1] == '\n') {
+        str_waktu.erase(str_waktu.length()-1);
+    }
+
+    baru->waktu = str_waktu;
+    baru->aksi = aksi;
+    baru->detail = detail;
+    baru->next = NULL;
+    baru->prev = NULL;
+
+    if (logHead == NULL) {
+        logHead = logTail = baru;
+    } else {
+        logTail->next = baru;
+        baru->prev = logTail;
+        logTail = baru;
+    }
+}
+
+void tampilkan_log_barang() {
+    if (logHead == NULL) {
+        cout << "\n[ Riwayat log masih kosong ]" << endl;
+        return;
+    }
+
+    cout << "\n" << string(100, '=') << endl;
+    cout << "                             RIWAYAT LOG AKTIVITAS (LIFO)                             " << endl;
+    cout << string(100, '=') << endl;
+    cout << left << setw(25) << "Waktu" << setw(20) << "Aksi" << "Detail" << endl;
+    cout << string(100, '-') << endl;
+
+    LogBarang* current = logTail;
+    while (current != NULL) {
+        cout << left << setw(25) << current->waktu 
+             << setw(20) << current->aksi 
+             << current->detail << endl;
+        current = current->prev;
+    }
+    cout << string(100, '=') << endl;
+}
+
 struct NodeBarang {
 	Barang data;
 	NodeBarang* next;
@@ -42,10 +100,6 @@ string generate_kode_barang(int id);
 
 Barang br;
 
-// int main() {
-// 	tambah_barang();
-// 	tampilkan_barang();
-// }
 
 bool is_kosong() {
     return head == NULL;
@@ -254,6 +308,8 @@ void tambah_barang() {
             tail->next = new_node;
             tail = new_node;
         }
+
+        tambah_log("Tambah Barang", "ID: " + to_string(new_node->data.id) + " | Nama: " + new_node->data.nama);
         
         cout << "\n[Barang ke-" << (i+1) << " berhasil ditambahkan!]" << endl;
         cout << "\n" << string(100, '-') << endl;
@@ -356,6 +412,7 @@ void hapus_barang() {
         }
 
         delete current;
+        tambah_log("Hapus Barang", "Kode: " + kode + " berhasil dihapus");
         cout << "Barang berhasil dihapus.\n";
     } 
     if(konfirmasi == 'n' || konfirmasi == 'N') {
@@ -544,8 +601,11 @@ void update_barang(){
         }
 
         cout << "\nData berhasil diupdate!\n";
+        tambah_log("Update Barang", "Update pada kode: " + kode);
     }
 }
+
+
 
 int main() {
     int pilihan;
@@ -601,7 +661,7 @@ int main() {
             cari_barang();
 
         }else if (pilihan == 6){
-            
+            tampilkan_log_barang();
         }
         else if (pilihan == 0) {
             cout << "Terima kasih!.\n";
