@@ -270,68 +270,120 @@ void cari_barang() {
 // Fitur Update Barang
 void update_barang(){
     if (is_kosong() == 1){
-        cout << "Tidak ada barang yang dapat diupdate.\n";
+        cout << "\nTidak ada barang yang dapat diupdate!\n";
     }
     else{
+        tampilkan_barang();
         string kode;
-        cout << "\nKode barang yang ingin diupdate: ";
-        cin >> kode;
-        cin.ignore();
-
         NodeBarang *current;
-        current = head;
 
-        while (current != NULL){
-            if (current->data.kode_barang == kode){
+        while (true){
+            cout << "\nMasukkan kode barang: ";
+            cin >> kode;
+
+            current = head;
+            while (current != NULL){
+                if (current->data.kode_barang == kode){
+                    break;
+                }
+                current = current->next;
+            }
+
+            if (current != NULL){
                 break;
             }
-            current = current->next;
+            else{
+                cout << "\nKode barang tidak ditemukan, silakan input kembali!\n";
+            }
         }
 
-        if (current == NULL){
-            cout << "Barang tidak ditemukan.\n";
+        int pilih;
+
+        while (true){
+            cout << "\n1. Update Nama";
+            cout << "\n2. Update Kategori";
+            cout << "\n3. Update Harga";
+            cout << "\n4. Update Stok";
+            cout << "\nPilih        : ";
+            cin >> pilih;
+
+            if (pilih >= 1 && pilih <= 4){
+                break;
+            }
+            else{
+                cout << "\nPilihan tidak valid, silakan input kembali!\n l";
+            }
         }
-        else{
-            int pilih;
+
+        if (pilih == 1){
+            string nama;
+            cin.ignore();
+
             while (true){
-                cout << "\nData ditemukan!";
-                cout << "\n1. Update Nama";
-                cout << "\n2. Update Kategori";
-                cout << "\n3. Update Harga Jual";
-                cout << "\n4. Update Stok";
-                cout << "\nPilih: ";
-                cin >> pilih;
-                cin.ignore();
+                cout << "Nama baru      : ";
+                getline(cin, nama);
 
-                if (pilih >= 1 && pilih <= 4){
+                if (nama != ""){
+                    current->data.nama = nama;
                     break;
                 }
                 else{
-                    cout << "\n Pilihan tidak valid, silakan coba lagi!";
+                    cout << "\nNama tidak boleh kosong, silakan input kembali!\n";
                 }
             }
-
-            if (pilih == 1){
-                cout << "\nNama baru: ";
-                getline(cin, current->data.nama);
-            }
-            else if (pilih == 2){
-                cout << "\nKategori baru: ";
-                getline(cin, current->data.kategori);
-            }
-            else if (pilih == 3){
-                cout << "\nHarga jual baru: ";
-                cin >> current->data.harga_jual;
-            }
-            else if (pilih == 4){
-                int tambah;
-                cout << "\nTambah stok: ";
-                cin >> tambah;
-                current->data.stok = current->data.stok + tambah;
-            }
-
-            cout << "\nData berhasil diupdate!";
         }
+        else if (pilih == 2){
+            string kategori;
+            cin.ignore();
+
+            while (true){
+                cout << "Kategori baru  : ";
+                getline(cin, kategori);
+
+                if (kategori != ""){
+                    current->data.kategori = kategori;
+                    break;
+                }
+                else{
+                    cout << "\nKategori tidak boleh kosong, silakan input kembali!\n";
+                }
+            }
+        }
+        else if (pilih == 3){
+            double harga;
+
+            while (true){
+                cout << "Harga baru     : ";
+                cin >> harga;
+
+                if (harga > 0){
+                    current->data.harga_jual = harga;
+                    break;
+                }
+                else{
+                    cout << "\nHarga harus lebih dari 0, silakan input kembali!\n";
+                }
+            }
+        }
+        else if (pilih == 4){
+            int jumlah;
+
+            while (true){
+                cout << "Stok sekarang: " << current->data.stok << endl;
+                cout << "Tambah/Kurang stok (+/-): ";
+                cin >> jumlah;
+
+                if (current->data.stok + jumlah < 0){
+                    cout << "\nStok tidak boleh minus, silakan input kembali!\n";
+                }
+                else{
+                    current->data.stok = current->data.stok + jumlah;
+                    break;
+                }
+            }
+        }
+
+        cout << "\nData berhasil diupdate!\n";
     }
 }
 
