@@ -119,36 +119,30 @@ void tambah_barang() {
 }
 
 void tampilkan_barang() {
-	if (is_kosong()) {
-    	cout << "List Barang kosong." << endl;
-    	return;
-	}
-	
-	cout << "\n=== DAFTAR BARANG ===" << endl;
-	cout << "\n" << string(100, '=') << endl;
-    cout << left << setw(5) << "No"
-         << setw(12) << "Kode"
-         << setw(20) << "Nama"
-         << setw(12) << "Kategori"
-         << setw(10) << "Stok"
-         << setw(10) << "Satuan"
-         << "Harga Jual" << endl;
-    cout << string(100, '-') << endl;
+    if (is_kosong()) {
+        cout << "List Barang kosong." << endl;
+        return;
+    }
     
+    cout << "\n=== DAFTAR BARANG ===" << endl;
+    cout << "\n" << string(100, '=') << endl;
+
     NodeBarang* current = head;
     int no = 1;
-    
+
     while(current != NULL) {
-        cout << left << setw(5) << no++
-             << setw(12) << current->data.kode_barang
-             << setw(20) << current->data.nama
-             << setw(12) << current->data.kategori
-             << setw(10) << current->data.stok
-             << setw(10) << current->data.satuan
-             << "Rp" << fixed << setprecision(0) << current->data.harga_jual << endl;
-        
+        cout << "No              : " << no++ << endl;
+        cout << "Kode Barang     : " << current->data.kode_barang << endl;
+        cout << "Nama Barang     : " << current->data.nama << endl;
+        cout << "Kategori        : " << current->data.kategori << endl;
+        cout << "Stok            : " << current->data.stok << endl;
+        cout << "Satuan          : " << current->data.satuan << endl;
+        cout << "Harga Jual      : Rp" << current->data.harga_jual << endl;
+        cout << string(100, '-') << endl;
+
         current = current->next;
     }
+
     cout << string(100, '=') << endl;      
 }
 
@@ -258,7 +252,9 @@ void cari_barang() {
         return;
     }
 
-    cout << "\nData yang dicari:\n";
+    cout << "\n=== HASIL PENCARIAN ===\n";
+    cout << string(60, '=') << endl;
+
     cout << "Kode               : " << current->data.kode_barang << endl;
     cout << "Nama               : " << current->data.nama << endl;
     cout << "Stok               : " << current->data.stok << endl;
@@ -267,6 +263,8 @@ void cari_barang() {
     cout << "Tgl Kadaluarsa     : " << current->data.tanggal_kadaluarsa << endl;
     cout << "Harga              : Rp" << current->data.harga_jual << endl;
     cout << "Satuan             : " << current->data.satuan << endl;
+
+    cout << string(60, '=') << endl;
 }
 
 // Fitur Update Barang
@@ -341,7 +339,9 @@ int main() {
     int pilihan;
 
     while (true) {
-        cout << "===   SISTEM MANAJEMEN STOK   ===" << endl;
+        cout << "\n=========================================\n";
+        cout << "     SISTEM MANAJEMEN STOK MINIMARKET\n";
+        cout << "=========================================\n";
         cout << "1. Tambah Barang" << endl;
         cout << "2. Tampilkan Barang" << endl;
         cout << "3. Hapus Barang" << endl;
@@ -351,8 +351,27 @@ int main() {
         cout << "0. Keluar" << endl;
         cout << "--------------------------------------------"<<endl;
         cout << "Pilih menu: ";
-        cin >> pilihan;
+        
+        
+        //validasi input pilihan menu
+         if (!(cin >> pilihan)) {
+            cout << "\nInput tidak valid! Harus berupa angka.\n";
+            cin.clear();
+            cin.ignore(1000, '\n');
+            cout << "Tekan ENTER untuk kembali ke menu...";
+            cin.get();
+            continue;
+        }
+
         cin.ignore();
+
+        //validasi pilihan menu
+        if (pilihan < 0 || pilihan > 6) {
+            cout << "\nPilihan tidak valid!\n";
+            cout << "Tekan ENTER untuk kembali ke menu...";
+            cin.get();
+            continue;
+        }
 
         if (pilihan == 1) {
             tambah_barang();
@@ -376,9 +395,8 @@ int main() {
             cout << "Terima kasih!.\n";
             break;
         }
-        else {
-            cout << "Pilihan tidak valid.\n";
-        }
+        cout << "\nTekan ENTER untuk kembali ke menu...";
+        cin.get();
     }
 
     return 0;
