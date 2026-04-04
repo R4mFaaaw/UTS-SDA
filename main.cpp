@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <limits> 
+#include <cctype>
 using namespace std;
 
 // projek uts: sistem manajemen stok barang minimarket
@@ -53,7 +54,12 @@ string generate_kode_barang(int id) {
     sprintf(buffer, "BRG%04d", id); 
     return string(buffer);
 }
-
+string toLowerCase(string text) {
+    for (int i = 0; i < text.length(); i++) {
+        text[i] = tolower(text[i]);
+    }
+    return text;
+}
 void tambah_barang() {
     int jumlah;
     
@@ -162,9 +168,9 @@ void hapus_barang() {
     NodeBarang* current = head;
     NodeBarang* prev = NULL;
 
-    while (current != NULL && current->data.kode_barang != kode) {
-        prev = current;
-        current = current->next;
+    while (current != NULL &&
+               toLowerCase(current->data.kode_barang) != toLowerCase(kode)) {
+            current = current->next;
     }
 
     if (current == NULL) {
@@ -207,7 +213,6 @@ void hapus_barang() {
         cout <<"tidak valid hanya boleh y/n\n";
     }
 }
-// FItur Mencari barang
 void cari_barang() {
     if (is_kosong()) {
         cout << "List barang kosong.\n";
@@ -215,10 +220,10 @@ void cari_barang() {
     }
 
     int opsi;
-    cout << "Cari barang berdasarkan:\n";
-    cout << "1. Kode Barang\n";
-    cout << "2. Nama Barang\n";
-    cout << "Pilih mana: ";
+    cout << "\n=== CARI BARANG ===\n";
+    cout << "1. Berdasarkan Kode Barang\n";
+    cout << "2. Berdasarkan Nama Barang\n";
+    cout << "Pilih opsi: ";
     cin >> opsi;
     cin.ignore();
 
@@ -229,28 +234,31 @@ void cari_barang() {
         cout << "\nMasukkan kode barang yang ingin dicari: ";
         cin >> kode;
 
-        while (current != NULL && current->data.kode_barang != kode) {
+        while (current != NULL &&
+               toLowerCase(current->data.kode_barang) != toLowerCase(kode)) {
             current = current->next;
         }
     }
     else if (opsi == 2) {
         string cari;
-        cout << "\nMasukkan nama yang ingin dicari: ";
+        cout << "\nMasukkan nama barang yang ingin dicari: ";
         getline(cin, cari);
 
-        while (current != NULL && current->data.nama != cari) {
+        while (current != NULL &&
+               toLowerCase(current->data.nama).find(toLowerCase(cari)) == string::npos) {
             current = current->next;
         }
     }
     else {
-        cout << "Tidak valid! Harus berupa angka 1/2\n";
+        cout << "Pilihan tidak valid! Gunakan 1 atau 2.\n";
         return;
     }
 
     if (current == NULL) {
-        cout << "Barang tidak ditemukan.\n";
+        cout << "\nBarang tidak ditemukan.\n";
         return;
     }
+
 
     cout << "\n=== HASIL PENCARIAN ===\n";
     cout << string(60, '=') << endl;
