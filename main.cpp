@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <iomanip>
 #include <limits> 
+#include <cctype>
+#include <ctime>
 using namespace std;
 
 // projek uts: sistem manajemen stok barang minimarket
@@ -21,8 +23,65 @@ struct Barang {
     string satuan;
     string tanggal_kadaluarsa;
     string supplier;
-    bool status;
 };
+
+struct LogBarang {
+    string waktu;
+    string aksi;
+    string detail;
+    LogBarang* next;
+    LogBarang* prev;
+};
+
+LogBarang* logHead = NULL;
+LogBarang* logTail = NULL;
+
+void tambah_log(string aksi, string detail) {
+    LogBarang* baru = new LogBarang;
+    
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    string str_waktu(dt);
+    if (!str_waktu.empty() && str_waktu[str_waktu.length()-1] == '\n') {
+        str_waktu.erase(str_waktu.length()-1);
+    }
+
+    baru->waktu = str_waktu;
+    baru->aksi = aksi;
+    baru->detail = detail;
+    baru->next = NULL;
+    baru->prev = NULL;
+
+    if (logHead == NULL) {
+        logHead = logTail = baru;
+    } else {
+        logTail->next = baru;
+        baru->prev = logTail;
+        logTail = baru;
+    }
+}
+
+void tampilkan_log_barang() {
+    if (logHead == NULL) {
+        cout << "\n[ Riwayat log masih kosong ]" << endl;
+        return;
+    }
+
+    cout << "\n" << string(100, '=') << endl;
+    cout << "                             RIWAYAT LOG AKTIVITAS (LIFO)                             " << endl;
+    cout << string(100, '=') << endl;
+    cout << left << setw(25) << "Waktu" << setw(20) << "Aksi" << "Detail" << endl;
+    cout << string(100, '-') << endl;
+
+    LogBarang* current = logTail;
+    while (current != NULL) {
+        cout << left << setw(25) << current->waktu 
+             << setw(20) << current->aksi 
+             << current->detail << endl;
+        current = current->prev;
+    }
+    cout << string(100, '=') << endl;
+}
 
 struct NodeBarang {
 	Barang data;
@@ -34,15 +93,13 @@ NodeBarang* tail = NULL;
 int next_id = 1; // auto increment id
 
 void tambah_barang();
-void edit_barang();
 void tampilkan_barang();
+bool is_kosong();
+string generate_kode_barang(int id);
+//void edit_barang();
 
 Barang br;
 
-// int main() {
-// 	tambah_barang();
-// 	tampilkan_barang();
-// }
 
 bool is_kosong() {
     return head == NULL;
@@ -54,12 +111,74 @@ string generate_kode_barang(int id) {
     return string(buffer);
 }
 
+string toLowerCase(string text) {
+    for (int i = 0; i < text.length(); i++) {
+        text[i] = tolower(text[i]);
+    }
+    return text;
+}
+
+bool is_valid_date_format(const string& date) {
+    int d, m, y;
+    char sep1, sep2;
+
+    // Memastikan format angka-karakter-angka-karakter-angka
+    // sscanf mengembalikan jumlah variabel yang berhasil diisi
+    if (sscanf(date.c_str(), "%d%c%d%c%d", &d, &sep1, &m, &sep2, &y) != 5) {
+        return false;
+    }
+
+    // Cek apakah pemisahnya benar-benar '-'
+    if (sep1 != '-' || sep2 != '-') return false;
+
+    // Validasi Bulan
+    if (m < 1 || m > 12) return false;
+
+    // Validasi Hari berdasarkan bulan
+    int hari_maks = 31;
+    if (m == 4 || m == 6 || m == 9 || m == 11) {
+        hari_maks = 30;
+    } else if (m == 2) {
+        // Cek Kabisat
+        if ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)) hari_maks = 29;
+        else hari_maks = 28;
+    }
+
+    if (d < 1 || d > hari_maks) return false;
+
+    return true;
+}
+
+bool is_future_date(const string& date) {
+    int d, m, y;
+    // Memecah string menjadi angka tanpa peduli posisi indeks
+    sscanf(date.c_str(), "%d-%d-%d", &d, &m, &y);
+
+    time_t t = time(0);
+    tm* now = localtime(&t);
+
+    int curr_d = now->tm_mday;
+    int curr_m = now->tm_mon + 1;
+    int curr_y = now->tm_year + 1900;
+
+    // Logika perbandingan yang lebih kuat:
+    if (y > curr_y) return true;
+    if (y < curr_y) return false;
+
+    // Jika tahun sama, cek bulan
+    if (m > curr_m) return true;
+    if (m < curr_m) return false;
+
+    // Jika tahun dan bulan sama, cek hari
+    return d >= curr_d;
+}
+
 void tambah_barang() {
     int jumlah;
     
     cout << "Jumlah barang yang ingin di-input: ";
     cin >> jumlah;
-    cin.ignore(); 
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
     
     cout << "\n=== TAMBAH BARANG ===\n";
     
@@ -68,36 +187,122 @@ void tambah_barang() {
         
         br.id = next_id++;
         br.kode_barang = generate_kode_barang(br.id);
-        br.status = true;
         
         cout << "Kode barang (otomatis): " << br.kode_barang << endl;
         
         cout << "> Nama barang: "; 
-        getline(cin, br.nama);
+		getline(cin, br.nama);
+		while(br.nama.empty()) {
+    		cout << "Nama tidak boleh kosong! Masukkan lagi: ";
+    		getline(cin, br.nama);
+		}
         
-        cout << "> Kategori: "; 
+        cout << "> Kategori [Enter jika lainnya]: "; 
         getline(cin, br.kategori);
         if(br.kategori.empty()) br.kategori = "Lainnya";
         
-        cout << "> Harga beli: "; 
-        cin >> br.harga_beli;
+        string input;
+		while (true) {
+    		cout << "> Harga beli: ";
+    		getline(cin, input);
+
+    		if (input.empty()) {
+        		cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+        		continue;
+    		}
+
+    		bool valid = true;
+    		for (int i = 0; i < input.length(); i++) {
+        		if (!isdigit(input[i]) && input[i] != '.') {
+            		valid = false;
+            		break;
+        		}	
+    		}
+
+    		if (!valid) {
+        		cout << "Input harus angka! Masukkan lagi: \n";
+        		continue;
+    		}
+
+    		br.harga_beli = atof(input.c_str());
+    		break;
+		}
+		
+		while (true) {
+    		cout << "> Harga jual: ";
+    		getline(cin, input);
+
+    		if (input.empty()) {
+        		cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+        		continue;
+    		}
+
+    		bool valid = true;
+    		for (int i = 0; i < input.length(); i++) {
+        		if (!isdigit(input[i]) && input[i] != '.') {
+            		valid = false;
+            		break;
+        		}	
+    		}
+
+    		if (!valid) {
+        		cout << "Input harus angka! Masukkan lagi: \n";
+        		continue;
+    		}
+
+    		br.harga_jual = atof(input.c_str());
+    		break;
+		}
         
-        cout << "> Harga jual: "; 
-        cin >> br.harga_jual;
-        
-        cout << "> Stok awal: "; 
-        cin >> br.stok;
-        
-        cout << "> Satuan (pcs/botol/pack): "; 
-        cin >> br.satuan;
+        while (true) {
+    		cout << "> Stok awal: ";
+    		getline(cin, input);
+
+		    if (input.empty()) {
+		        cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+		        continue;
+    		}
+
+    		bool valid = true;
+    		for (int i = 0; i < input.length(); i++) {
+        		if (!isdigit(input[i])) {
+            		valid = false;
+            		break;
+        		}
+    		}	
+
+    		if (!valid) {
+        		cout << "Input harus angka! Masukkan lagi: \n";
+        		continue;
+    		}
+
+    		br.stok = atoi(input.c_str());
+    		break;
+		}
+                
+        cout << "> Satuan [Enter jika pcs]: "; 
+        getline(cin, br.satuan);
         if(br.satuan.empty()) br.satuan = "pcs";
         
-        cout << "> Tanggal kadaluarsa (DD-MM-YYYY) [Enter jika tidak ada]: "; 
-        cin.ignore();
-        getline(cin, br.tanggal_kadaluarsa);
-        if(br.tanggal_kadaluarsa.empty()) br.tanggal_kadaluarsa = "-";
+        cout << "> Tanggal kadaluarsa (DD-MM-YYYY) [Enter jika tidak ada]: ";
+		getline(cin, br.tanggal_kadaluarsa);
+
+		if(br.tanggal_kadaluarsa.empty()) {
+    		br.tanggal_kadaluarsa = "-";
+		} else {
+    		while(true) {
+        		if(!is_valid_date_format(br.tanggal_kadaluarsa)) {
+            		cout << "Format tanggal salah! Gunakan DD-MM-YYYY: ";
+        		} else if(!is_future_date(br.tanggal_kadaluarsa)) {
+            		cout << "Tanggal tidak boleh kurang dari hari ini! Masukkan lagi: ";
+        		} else {
+            		break;
+        		}
+        		getline(cin, br.tanggal_kadaluarsa);
+    		}
+		}
         
-        cout << "> Supplier: "; 
+        cout << "> Supplier [Enter jika tidak ada]: "; 
         getline(cin, br.supplier);
         if(br.supplier.empty()) br.supplier = "-";
         
@@ -112,6 +317,8 @@ void tambah_barang() {
             tail->next = new_node;
             tail = new_node;
         }
+
+        tambah_log("Tambah Barang", "ID: " + to_string(new_node->data.id) + " | Nama: " + new_node->data.nama);
         
         cout << "\n[Barang ke-" << (i+1) << " berhasil ditambahkan!]" << endl;
         cout << "\n" << string(100, '-') << endl;
@@ -123,27 +330,43 @@ void tampilkan_barang() {
         cout << "List Barang kosong." << endl;
         return;
     }
-    
+
     cout << "\n=== DAFTAR BARANG ===" << endl;
-    cout << "\n" << string(100, '=') << endl;
+    cout << string(148, '=') << endl;
+
+    cout << left << setw(5)  << "No"
+         << setw(8)  << "ID"
+         << setw(12) << "Kode"
+         << setw(20) << "Nama"
+         << setw(15) << "Kategori"
+         << setw(12) << "Hrg Beli"
+         << setw(12) << "Hrg Jual"
+         << setw(8)  << "Stok"
+         << setw(10) << "Satuan"
+         << setw(15) << "Expired"
+         << "Supplier" << endl;
+
+    cout << string(148, '-') << endl;
 
     NodeBarang* current = head;
     int no = 1;
 
-    while(current != NULL) {
-        cout << "No              : " << no++ << endl;
-        cout << "Kode Barang     : " << current->data.kode_barang << endl;
-        cout << "Nama Barang     : " << current->data.nama << endl;
-        cout << "Kategori        : " << current->data.kategori << endl;
-        cout << "Stok            : " << current->data.stok << endl;
-        cout << "Satuan          : " << current->data.satuan << endl;
-        cout << "Harga Jual      : Rp" << current->data.harga_jual << endl;
-        cout << string(100, '-') << endl;
-
-        current = current->next;
+    while (current != NULL) {
+        cout << left << setw(5)  << no++
+             << setw(8)  << current->data.id
+             << setw(12) << current->data.kode_barang
+             << setw(20) << current->data.nama
+             << setw(15) << current->data.kategori
+             << setw(12) << fixed << setprecision(0) << current->data.harga_beli
+             << setw(12) << current->data.harga_jual
+             << setw(8)  << current->data.stok
+             << setw(10) << current->data.satuan
+             << setw(15) << current->data.tanggal_kadaluarsa
+             << current->data.supplier << endl;
+        current = current->next; 
     }
-
-    cout << string(100, '=') << endl;      
+    
+    cout << string(148, '=') << endl;
 }
 
 // Fitur Mengahapus barang 
@@ -162,9 +385,9 @@ void hapus_barang() {
     NodeBarang* current = head;
     NodeBarang* prev = NULL;
 
-    while (current != NULL && current->data.kode_barang != kode) {
-        prev = current;
-        current = current->next;
+    while (current != NULL &&
+               toLowerCase(current->data.kode_barang) != toLowerCase(kode)) {
+            current = current->next;
     }
 
     if (current == NULL) {
@@ -198,6 +421,7 @@ void hapus_barang() {
         }
 
         delete current;
+        tambah_log("Hapus Barang", "Kode: " + kode + " berhasil dihapus");
         cout << "Barang berhasil dihapus.\n";
     } 
     if(konfirmasi == 'n' || konfirmasi == 'N') {
@@ -207,7 +431,6 @@ void hapus_barang() {
         cout <<"tidak valid hanya boleh y/n\n";
     }
 }
-// FItur Mencari barang
 void cari_barang() {
     if (is_kosong()) {
         cout << "List barang kosong.\n";
@@ -215,10 +438,10 @@ void cari_barang() {
     }
 
     int opsi;
-    cout << "Cari barang berdasarkan:\n";
-    cout << "1. Kode Barang\n";
-    cout << "2. Nama Barang\n";
-    cout << "Pilih mana: ";
+    cout << "\n=== CARI BARANG ===\n";
+    cout << "1. Berdasarkan Kode Barang\n";
+    cout << "2. Berdasarkan Nama Barang\n";
+    cout << "Pilih opsi: ";
     cin >> opsi;
     cin.ignore();
 
@@ -229,28 +452,31 @@ void cari_barang() {
         cout << "\nMasukkan kode barang yang ingin dicari: ";
         cin >> kode;
 
-        while (current != NULL && current->data.kode_barang != kode) {
+        while (current != NULL &&
+               toLowerCase(current->data.kode_barang) != toLowerCase(kode)) {
             current = current->next;
         }
     }
     else if (opsi == 2) {
         string cari;
-        cout << "\nMasukkan nama yang ingin dicari: ";
+        cout << "\nMasukkan nama barang yang ingin dicari: ";
         getline(cin, cari);
 
-        while (current != NULL && current->data.nama != cari) {
+        while (current != NULL &&
+               toLowerCase(current->data.nama).find(toLowerCase(cari)) == string::npos) {
             current = current->next;
         }
     }
     else {
-        cout << "Tidak valid! Harus berupa angka 1/2\n";
+        cout << "Pilihan tidak valid! Gunakan 1 atau 2.\n";
         return;
     }
 
     if (current == NULL) {
-        cout << "Barang tidak ditemukan.\n";
+        cout << "\nBarang tidak ditemukan.\n";
         return;
     }
+
 
     cout << "\n=== HASIL PENCARIAN ===\n";
     cout << string(60, '=') << endl;
@@ -270,70 +496,125 @@ void cari_barang() {
 // Fitur Update Barang
 void update_barang(){
     if (is_kosong() == 1){
-        cout << "Tidak ada barang yang dapat diupdate.\n";
+        cout << "\nTidak ada barang yang dapat diupdate!\n";
     }
     else{
+        tampilkan_barang();
         string kode;
-        cout << "\nKode barang yang ingin diupdate: ";
-        cin >> kode;
-        cin.ignore();
-
         NodeBarang *current;
-        current = head;
 
-        while (current != NULL){
-            if (current->data.kode_barang == kode){
+        while (true){
+            cout << "\nMasukkan kode barang: ";
+            cin >> kode;
+
+            current = head;
+            while (current != NULL){
+                if (current->data.kode_barang == kode){
+                    break;
+                }
+                current = current->next;
+            }
+
+            if (current != NULL){
                 break;
             }
-            current = current->next;
+            else{
+                cout << "\nKode barang tidak ditemukan, silakan input kembali!\n";
+            }
         }
 
-        if (current == NULL){
-            cout << "Barang tidak ditemukan.\n";
+        int pilih;
+
+        while (true){
+            cout << "\n1. Update Nama";
+            cout << "\n2. Update Kategori";
+            cout << "\n3. Update Harga";
+            cout << "\n4. Update Stok";
+            cout << "\nPilih        : ";
+            cin >> pilih;
+
+            if (pilih >= 1 && pilih <= 4){
+                break;
+            }
+            else{
+                cout << "\nPilihan tidak valid, silakan input kembali!\n l";
+            }
         }
-        else{
-            int pilih;
+
+        if (pilih == 1){
+            string nama;
+            cin.ignore();
+
             while (true){
-                cout << "\nData ditemukan!";
-                cout << "\n1. Update Nama";
-                cout << "\n2. Update Kategori";
-                cout << "\n3. Update Harga Jual";
-                cout << "\n4. Update Stok";
-                cout << "\nPilih: ";
-                cin >> pilih;
-                cin.ignore();
+                cout << "Nama baru      : ";
+                getline(cin, nama);
 
-                if (pilih >= 1 && pilih <= 4){
+                if (nama != ""){
+                    current->data.nama = nama;
                     break;
                 }
                 else{
-                    cout << "\n Pilihan tidak valid, silakan coba lagi!";
+                    cout << "\nNama tidak boleh kosong, silakan input kembali!\n";
                 }
             }
-
-            if (pilih == 1){
-                cout << "\nNama baru: ";
-                getline(cin, current->data.nama);
-            }
-            else if (pilih == 2){
-                cout << "\nKategori baru: ";
-                getline(cin, current->data.kategori);
-            }
-            else if (pilih == 3){
-                cout << "\nHarga jual baru: ";
-                cin >> current->data.harga_jual;
-            }
-            else if (pilih == 4){
-                int tambah;
-                cout << "\nTambah stok: ";
-                cin >> tambah;
-                current->data.stok = current->data.stok + tambah;
-            }
-
-            cout << "\nData berhasil diupdate!";
         }
+        else if (pilih == 2){
+            string kategori;
+            cin.ignore();
+
+            while (true){
+                cout << "Kategori baru  : ";
+                getline(cin, kategori);
+
+                if (kategori != ""){
+                    current->data.kategori = kategori;
+                    break;
+                }
+                else{
+                    cout << "\nKategori tidak boleh kosong, silakan input kembali!\n";
+                }
+            }
+        }
+        else if (pilih == 3){
+            double harga;
+
+            while (true){
+                cout << "Harga baru     : ";
+                cin >> harga;
+
+                if (harga > 0){
+                    current->data.harga_jual = harga;
+                    break;
+                }
+                else{
+                    cout << "\nHarga harus lebih dari 0, silakan input kembali!\n";
+                }
+            }
+        }
+        else if (pilih == 4){
+            int jumlah;
+
+            while (true){
+                cout << "Stok sekarang: " << current->data.stok << endl;
+                cout << "Tambah/Kurang stok (+/-): ";
+                cin >> jumlah;
+
+                if (current->data.stok + jumlah < 0){
+                    cout << "\nStok tidak boleh minus, silakan input kembali!\n";
+                }
+                else{
+                    current->data.stok = current->data.stok + jumlah;
+                    break;
+                }
+            }
+        }
+
+        cout << "\nData berhasil diupdate!\n";
+        tambah_log("Update Barang", "Update pada kode: " + kode);
     }
 }
+
+
 
 int main() {
     int pilihan;
@@ -389,7 +670,7 @@ int main() {
             cari_barang();
 
         }else if (pilihan == 6){
-            
+            tampilkan_log_barang();
         }
         else if (pilihan == 0) {
             cout << "Terima kasih!.\n";
