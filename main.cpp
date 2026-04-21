@@ -12,6 +12,14 @@ using namespace std;
 // projek uts: sistem manajemen stok barang minimarket
 // materi yang harus ada: variable, tipe data, array, structure, pointer, single linked list, double linked list, 
 
+void bersihkan_layar() {
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
+
 struct Barang {
     int id;
     string kode_barang;
@@ -62,6 +70,7 @@ void tambah_log(string aksi, string detail) {
 }
 
 void tampilkan_log_barang() {
+    bersihkan_layar();
     if (logHead == NULL) {
         cout << "\n[ Riwayat log masih kosong ]" << endl;
         return;
@@ -165,6 +174,7 @@ bool is_future_date(const string& date) {
 }
 
 void tambah_barang() {
+    bersihkan_layar();
     int jumlah;
     
     cout << "Jumlah barang yang ingin di-input: ";
@@ -317,6 +327,7 @@ void tambah_barang() {
 }
 
 void tampilkan_barang() {
+    bersihkan_layar();
     if (is_kosong()) {
         cout << "List Barang kosong." << endl;
         return;
@@ -362,6 +373,7 @@ void tampilkan_barang() {
 
 // Fitur Mengahapus barang 
 void hapus_barang() {
+    bersihkan_layar();
     if (is_kosong()) {
         cout << "List barang kosong.\n";
         return;
@@ -423,6 +435,7 @@ void hapus_barang() {
     }
 }
 void cari_barang() {
+    bersihkan_layar();
     if (is_kosong()) {
         cout << "List barang kosong.\n";
         return;
@@ -486,6 +499,7 @@ void cari_barang() {
 
 // Fitur Update Barang
 void update_barang(){
+    bersihkan_layar();
     if (is_kosong() == 1){
         cout << "\nTidak ada barang yang dapat diupdate!\n";
     }
@@ -611,6 +625,7 @@ int main() {
     int pilihan;
 
     while (true) {
+        bersihkan_layar();
         cout << "\n=========================================\n";
         cout << "     SISTEM MANAJEMEN STOK MINIMARKET\n";
         cout << "=========================================\n";
