@@ -12,6 +12,14 @@ using namespace std;
 // projek uts: sistem manajemen stok barang minimarket
 // materi yang harus ada: variable, tipe data, array, structure, pointer, single linked list, double linked list, 
 
+void bersihkan_layar() {
+    #ifdef _WIN32
+        system("cls");
+    #else
+        system("clear");
+    #endif
+}
+
 struct Barang {
     int id;
     string kode_barang;
@@ -62,6 +70,7 @@ void tambah_log(string aksi, string detail) {
 }
 
 void tampilkan_log_barang() {
+    bersihkan_layar();
     if (logHead == NULL) {
         cout << "\n[ Riwayat log masih kosong ]" << endl;
         return;
@@ -119,40 +128,36 @@ string toLowerCase(string text) {
 }
 
 bool is_valid_date_format(const string& date) {
-    int d, m, y;
-    char sep1, sep2;
+    if (date.length() != 10) return false;
+    if (date[2] != '-' || date[5] != '-') return false;
 
-    // Memastikan format angka-karakter-angka-karakter-angka
-    // sscanf mengembalikan jumlah variabel yang berhasil diisi
-    if (sscanf(date.c_str(), "%d%c%d%c%d", &d, &sep1, &m, &sep2, &y) != 5) {
-        return false;
+    for (int i = 0; i < date.length(); i++) {
+        if (i == 2 || i == 5) continue;
+        if (!isdigit(date[i])) return false;
     }
 
-    // Cek apakah pemisahnya benar-benar '-'
-    if (sep1 != '-' || sep2 != '-') return false;
-
-    // Validasi Bulan
+    int d = atoi(date.substr(0,2).c_str());
+    int m = atoi(date.substr(3,2).c_str());
+    int y = atoi(date.substr(6,4).c_str());
+    
     if (m < 1 || m > 12) return false;
+    if (d < 1 || d > 31) return false;
 
-    // Validasi Hari berdasarkan bulan
-    int hari_maks = 31;
     if (m == 4 || m == 6 || m == 9 || m == 11) {
-        hari_maks = 30;
-    } else if (m == 2) {
-        // Cek Kabisat
-        if ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)) hari_maks = 29;
-        else hari_maks = 28;
+        if (d > 30) return false;
     }
 
-    if (d < 1 || d > hari_maks) return false;
+    if (m == 2) {
+        if (d > 29) return false;
+    }
 
     return true;
 }
 
 bool is_future_date(const string& date) {
-    int d, m, y;
-    // Memecah string menjadi angka tanpa peduli posisi indeks
-    sscanf(date.c_str(), "%d-%d-%d", &d, &m, &y);
+    int d = atoi(date.substr(0,2).c_str());
+	int m = atoi(date.substr(3,2).c_str());
+	int y = atoi(date.substr(6,4).c_str());
 
     time_t t = time(0);
     tm* now = localtime(&t);
@@ -161,19 +166,15 @@ bool is_future_date(const string& date) {
     int curr_m = now->tm_mon + 1;
     int curr_y = now->tm_year + 1900;
 
-    // Logika perbandingan yang lebih kuat:
-    if (y > curr_y) return true;
     if (y < curr_y) return false;
+    if (y == curr_y && m < curr_m) return false;
+    if (y == curr_y && m == curr_m && d < curr_d) return false;
 
-    // Jika tahun sama, cek bulan
-    if (m > curr_m) return true;
-    if (m < curr_m) return false;
-
-    // Jika tahun dan bulan sama, cek hari
-    return d >= curr_d;
+    return true;
 }
 
 void tambah_barang() {
+    bersihkan_layar();
     int jumlah;
     
     cout << "Jumlah barang yang ingin di-input: ";
@@ -326,6 +327,7 @@ void tambah_barang() {
 }
 
 void tampilkan_barang() {
+    bersihkan_layar();
     if (is_kosong()) {
         cout << "List Barang kosong." << endl;
         return;
@@ -371,6 +373,7 @@ void tampilkan_barang() {
 
 // Fitur Mengahapus barang 
 void hapus_barang() {
+    bersihkan_layar();
     if (is_kosong()) {
         cout << "List barang kosong.\n";
         return;
@@ -432,6 +435,7 @@ void hapus_barang() {
     }
 }
 void cari_barang() {
+    bersihkan_layar();
     if (is_kosong()) {
         cout << "List barang kosong.\n";
         return;
@@ -495,6 +499,7 @@ void cari_barang() {
 
 // Fitur Update Barang
 void update_barang(){
+    bersihkan_layar();
     if (is_kosong() == 1){
         cout << "\nTidak ada barang yang dapat diupdate!\n";
     }
@@ -613,72 +618,370 @@ void update_barang(){
         tambah_log("Update Barang", "Update pada kode: " + kode);
     }
 }
+// Irena : Login Admin untuk Kasir
+// ceritanya dibatasin hanya ada 4 kasir
+// menggunakan array
+struct Admin {
+    string username;
+    string password;
+};
 
+Admin adminKasir[3] = {
+    {"kasir1", "111111"},
+    {"kasir2", "222222"},
+    {"kasir3", "333333"}
+};
 
+bool login() {
+    string username, password;
+    int percobaan = 0;
 
+    while (percobaan < 3) {
+        bersihkan_layar();
+
+        cout << "=====================================\n";
+        cout << "        LOGIN ADMIN KASIR\n";
+        cout << "=====================================\n";
+
+        cout << "Username : ";
+        getline(cin, username);
+
+        cout << "Password : ";
+        getline(cin, password);
+
+        bool berhasil = false;
+
+        for (int i = 0; i < 3; i++) {
+            if (username == adminKasir[i].username &&
+                password == adminKasir[i].password) {
+
+                berhasil = true;
+                break;
+            }
+        }
+
+        if (berhasil) {
+            cout << "\nLogin berhasil!\n";
+            return true;
+        } else {
+            percobaan++;
+            cout << "\nUsername atau password salah!\n";
+            cout << "Sisa percobaan: " << (3 - percobaan) << endl;
+
+            if (percobaan < 3) {
+                cout << "Tekan ENTER untuk coba lagi...";
+                cin.get();
+            }
+        }
+    }
+
+    cout << "\nAnda gagal login 3 kali.\n";
+    return false;
+}
+//  Kasir men input data untuk costumer yang melakukan transaksi secara OFFLINE
+// queue dan STackk
+struct QueueCustomer {
+    string nama_customer;
+    QueueCustomer* next;
+};
+
+QueueCustomer* frontQueue = NULL;
+QueueCustomer* rearQueue = NULL;
+void enqueueCustomer(string nama) {
+
+    QueueCustomer* baru = new QueueCustomer();
+
+    baru->nama_customer = nama;
+    baru->next = NULL;
+
+    if (frontQueue == NULL) {
+        frontQueue = rearQueue = baru;
+    }
+    else {
+        rearQueue->next = baru;
+        rearQueue = baru;
+    }
+}
+void dequeueCustomer() {
+
+    if (frontQueue == NULL) {
+        return;
+    }
+
+    QueueCustomer* hapus = frontQueue;
+
+    frontQueue = frontQueue->next;
+
+    if (frontQueue == NULL) {
+        rearQueue = NULL;
+    }
+
+    delete hapus;
+}
+struct StackTransaksi {
+    string receipt;
+    StackTransaksi* next;
+};
+StackTransaksi* topTransaksi = NULL;
+void pushTransaksi(string receipt) {
+
+    StackTransaksi* baru = new StackTransaksi();
+
+    baru->receipt = receipt;
+    baru->next = topTransaksi;
+
+    topTransaksi = baru;
+}
+void tampilkan_riwayat_transaksi() {
+
+    bersihkan_layar();
+
+    if (topTransaksi == NULL) {
+        cout << "Belum ada transaksi.\n";
+        return;
+    }
+
+    StackTransaksi* current = topTransaksi;
+
+    cout << "\n=== RIWAYAT TRANSAKSI ===\n";
+
+    while (current != NULL) {
+
+        cout << current->receipt << endl;
+        cout << "\n====================================\n";
+
+        current = current->next;
+    }
+}
+void transaksi_kasir() {
+
+    bersihkan_layar();
+
+    string namaCustomer;
+    string kodeBarang;
+    int jumlah;
+
+    cout << "\n=========== TRANSAKSI KASIR ===========\n";
+
+    cout << "Nama customer : ";
+    getline(cin, namaCustomer);
+
+    // masuk queue
+    enqueueCustomer(namaCustomer);
+
+    tampilkan_barang();
+
+    cout << "\nMasukkan kode barang : ";
+    getline(cin, kodeBarang);
+
+    NodeBarang* current = head;
+
+    while (current != NULL) {
+
+        if (toLowerCase(current->data.kode_barang)
+            == toLowerCase(kodeBarang)) {
+
+            break;
+        }
+
+        current = current->next;
+    }
+
+    if (current == NULL) {
+
+        cout << "\nBarang tidak ditemukan!\n";
+
+        dequeueCustomer();
+        return;
+    }
+
+    cout << "Jumlah beli : ";
+    cin >> jumlah;
+    cin.ignore();
+
+    if (jumlah > current->data.stok) {
+
+        cout << "\nStok tidak cukup!\n";
+
+        dequeueCustomer();
+        return;
+    }
+
+    // stok otomatis berkurang
+    current->data.stok -= jumlah;
+
+    double total = jumlah * current->data.harga_jual;
+
+    // receipt
+    string receipt =
+        "\n=========== RECEIPT ===========\n"
+        "Nama Customer : " + namaCustomer +
+        "\nBarang         : " + current->data.nama +
+        "\nJumlah         : " + to_string(jumlah) +
+        "\nHarga          : Rp" + to_string((int)current->data.harga_jual) +
+        "\nTotal          : Rp" + to_string((int)total) +
+        "\n================================";
+
+    cout << receipt << endl;
+
+    // masuk stack transaksi
+    pushTransaksi(receipt);
+
+    // log
+    tambah_log(
+        "Transaksi",
+        namaCustomer + " membeli " + current->data.nama
+    );
+
+    // keluar queue
+    dequeueCustomer();
+}
+// Mencoba Tolong DIbenerin aja kalo updaet
 int main() {
+
+    // LOGIN ADMIN KASIR
+    if (!login()) {
+        return 0;
+    }
+
     int pilihan;
 
     while (true) {
+
+        bersihkan_layar();
+
         cout << "\n=========================================\n";
-        cout << "     SISTEM MANAJEMEN STOK MINIMARKET\n";
+        cout << "          MENU ADMIN KASIR\n";
         cout << "=========================================\n";
-        cout << "1. Tambah Barang" << endl;
+
+        cout << "1. Transaksi Kasir" << endl;
         cout << "2. Tampilkan Barang" << endl;
-        cout << "3. Hapus Barang" << endl;
-        cout << "4. Update Barang" << endl;
-        cout << "5. Cari Barang"<<endl;
-        cout << "6. Fitur LOG barang"<<endl;
+        cout << "3. Input Barang" << endl;
+        cout << "4. Riwayat Transaksi" << endl;
+        cout << "5. Log Aktivitas" << endl;
         cout << "0. Keluar" << endl;
-        cout << "--------------------------------------------"<<endl;
-        cout << "Pilih menu: ";
-        
-        
-        //validasi input pilihan menu
-         if (!(cin >> pilihan)) {
-            cout << "\nInput tidak valid! Harus berupa angka.\n";
+
+        cout << "-----------------------------------------\n";
+        cout << "Pilih menu : ";
+
+        // validasi input angka
+        if (!(cin >> pilihan)) {
+
+            cout << "\nInput harus angka!\n";
+
             cin.clear();
             cin.ignore(1000, '\n');
-            cout << "Tekan ENTER untuk kembali ke menu...";
+
+            cout << "\nTekan ENTER untuk kembali...";
             cin.get();
+
             continue;
         }
 
         cin.ignore();
 
-        //validasi pilihan menu
-        if (pilihan < 0 || pilihan > 6) {
-            cout << "\nPilihan tidak valid!\n";
-            cout << "Tekan ENTER untuk kembali ke menu...";
-            cin.get();
-            continue;
+        switch (pilihan) {
+
+            case 1:
+                transaksi_kasir();
+                break;
+
+            case 2:
+                tampilkan_barang();
+                break;
+
+            case 3:
+                tambah_barang();
+                break;
+
+            case 4:
+                tampilkan_riwayat_transaksi();
+                break;
+
+            case 5:
+                tampilkan_log_barang();
+                break;
+
+            case 0:
+                cout << "\nTerima kasih.\n";
+                return 0;
+
+            default:
+                cout << "\nMenu tidak valid!\n";
         }
 
-        if (pilihan == 1) {
-            tambah_barang();
-        }
-        else if (pilihan == 2) {
-            tampilkan_barang();
-        }
-        else if (pilihan == 3) {
-            hapus_barang();
-        }
-        else if (pilihan == 4){
-            update_barang();
-        }
-        else if (pilihan == 5){
-            cari_barang();
-
-        }else if (pilihan == 6){
-            tampilkan_log_barang();
-        }
-        else if (pilihan == 0) {
-            cout << "Terima kasih!.\n";
-            break;
-        }
-        cout << "\nTekan ENTER untuk kembali ke menu...";
+        cout << "\nTekan ENTER untuk kembali...";
         cin.get();
     }
 
     return 0;
 }
+
+
+// int main() {
+//     int pilihan;
+
+//     while (true) {
+//         bersihkan_layar();
+//         cout << "\n=========================================\n";
+//         cout << "     SISTEM MANAJEMEN STOK MINIMARKET\n";
+//         cout << "=========================================\n";
+//         cout << "1. Tambah Barang" << endl;
+//         cout << "2. Tampilkan Barang" << endl;
+//         cout << "3. Hapus Barang" << endl;
+//         cout << "4. Update Barang" << endl;
+//         cout << "5. Cari Barang"<<endl;
+//         cout << "6. Fitur LOG barang"<<endl;
+//         cout << "0. Keluar" << endl;
+//         cout << "--------------------------------------------"<<endl;
+//         cout << "Pilih menu: ";
+        
+        
+//         //validasi input pilihan menu
+//          if (!(cin >> pilihan)) {
+//             cout << "\nInput tidak valid! Harus berupa angka.\n";
+//             cin.clear();
+//             cin.ignore(1000, '\n');
+//             cout << "Tekan ENTER untuk kembali ke menu...";
+//             cin.get();
+//             continue;
+//         }
+
+//         cin.ignore();
+
+//         //validasi pilihan menu
+//         if (pilihan < 0 || pilihan > 6) {
+//             cout << "\nPilihan tidak valid!\n";
+//             cout << "Tekan ENTER untuk kembali ke menu...";
+//             cin.get();
+//             continue;
+//         }
+
+//         if (pilihan == 1) {
+//             tambah_barang();
+//         }
+//         else if (pilihan == 2) {
+//             tampilkan_barang();
+//         }
+//         else if (pilihan == 3) {
+//             hapus_barang();
+//         }
+//         else if (pilihan == 4){
+//             update_barang();
+//         }
+//         else if (pilihan == 5){
+//             cari_barang();
+
+//         }else if (pilihan == 6){
+//             tampilkan_log_barang();
+//         }
+//         else if (pilihan == 0) {
+//             cout << "Terima kasih!.\n";
+//             break;
+//         }
+//         cout << "\nTekan ENTER untuk kembali ke menu...";
+//         cin.get();
+//     }
+
+//     return 0;
+// }
