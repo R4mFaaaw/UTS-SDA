@@ -1,0 +1,21 @@
+# Compiled Executables
+*.exe
+*.out
+*.app
+
+# Intermediate Objects
+*.o
+*.obj
+
+# Visual Studio Code
+.vscode/
+.history/
+*.log
+
+# IDE - Dev-C++ 
+*.layout
+*.win
+
+# OS generated files
+.DS_Store
+Thumbs.db
