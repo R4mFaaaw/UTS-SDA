@@ -917,71 +917,200 @@ int main() {
     return 0;
 }
 
+int main() {
 
-// int main() {
-//     int pilihan;
+    int role;
 
-//     while (true) {
-//         bersihkan_layar();
-//         cout << "\n=========================================\n";
-//         cout << "     SISTEM MANAJEMEN STOK MINIMARKET\n";
-//         cout << "=========================================\n";
-//         cout << "1. Tambah Barang" << endl;
-//         cout << "2. Tampilkan Barang" << endl;
-//         cout << "3. Hapus Barang" << endl;
-//         cout << "4. Update Barang" << endl;
-//         cout << "5. Cari Barang"<<endl;
-//         cout << "6. Fitur LOG barang"<<endl;
-//         cout << "0. Keluar" << endl;
-//         cout << "--------------------------------------------"<<endl;
-//         cout << "Pilih menu: ";
-        
-        
-//         //validasi input pilihan menu
-//          if (!(cin >> pilihan)) {
-//             cout << "\nInput tidak valid! Harus berupa angka.\n";
-//             cin.clear();
-//             cin.ignore(1000, '\n');
-//             cout << "Tekan ENTER untuk kembali ke menu...";
-//             cin.get();
-//             continue;
-//         }
+    while (true) {
 
-//         cin.ignore();
+        bersihkan_layar();
 
-//         //validasi pilihan menu
-//         if (pilihan < 0 || pilihan > 6) {
-//             cout << "\nPilihan tidak valid!\n";
-//             cout << "Tekan ENTER untuk kembali ke menu...";
-//             cin.get();
-//             continue;
-//         }
+        cout << "\n=========================================\n";
+        cout << "     SISTEM MANAJEMEN MINIMARKET\n";
+        cout << "=========================================\n";
 
-//         if (pilihan == 1) {
-//             tambah_barang();
-//         }
-//         else if (pilihan == 2) {
-//             tampilkan_barang();
-//         }
-//         else if (pilihan == 3) {
-//             hapus_barang();
-//         }
-//         else if (pilihan == 4){
-//             update_barang();
-//         }
-//         else if (pilihan == 5){
-//             cari_barang();
+        cout << "1. Admin Gudang" << endl;
+        cout << "2. Admin Kasir" << endl;
+        cout << "0. Keluar" << endl;
 
-//         }else if (pilihan == 6){
-//             tampilkan_log_barang();
-//         }
-//         else if (pilihan == 0) {
-//             cout << "Terima kasih!.\n";
-//             break;
-//         }
-//         cout << "\nTekan ENTER untuk kembali ke menu...";
-//         cin.get();
-//     }
+        cout << "-----------------------------------------\n";
+        cout << "Pilih role : ";
 
-//     return 0;
-// }
+        if (!(cin >> role)) {
+
+            cout << "\nInput harus angka!\n";
+
+            cin.clear();
+            cin.ignore(1000, '\n');
+
+            cout << "\nTekan ENTER untuk kembali...";
+            cin.get();
+
+            continue;
+        }
+
+        cin.ignore();
+
+        //admin gudang
+        if (role == 1) {
+
+            int pilihanGudang;
+
+            while (true) {
+
+                bersihkan_layar();
+
+                cout << "\n=========================================\n";
+                cout << "            MENU ADMIN GUDANG\n";
+                cout << "=========================================\n";
+
+                cout << "1. Input Barang" << endl;
+                cout << "2. Tampilkan Barang" << endl;
+                cout << "3. Hapus Barang" << endl;
+                cout << "4. Update Barang" << endl;
+                cout << "5. Cari Barang" << endl;
+                cout << "6. Log Aktivitas" << endl;
+                cout << "0. Kembali" << endl;
+
+                cout << "-----------------------------------------\n";
+                cout << "Pilih menu : ";
+
+                if (!(cin >> pilihanGudang)) {
+
+                    cout << "\nInput harus angka!\n";
+
+                    cin.clear();
+                    cin.ignore(1000, '\n');
+
+                    cout << "\nTekan ENTER untuk kembali...";
+                    cin.get();
+
+                    continue;
+                }
+
+                cin.ignore();
+
+                switch (pilihanGudang) {
+
+                    case 1:
+                        tambah_barang();
+                        break;
+
+                    case 2:
+                        tampilkan_barang();
+                        break;
+
+                    case 3:
+                        hapus_barang();
+                        break;
+
+                    case 4:
+                        update_barang();
+                        break;
+
+                    case 5:
+                        cari_barang();
+                        break;
+
+                    case 6:
+                        tampilkan_log_barang();
+                        break;
+
+                    case 0:
+                        break;
+
+                    default:
+                        cout << "\nMenu tidak valid!\n";
+                }
+
+                if (pilihanGudang == 0) {
+                    break;
+                }
+
+                cout << "\nTekan ENTER untuk kembali...";
+                cin.get();
+            }
+        }
+
+        //admin kasir
+        else if (role == 2) {
+
+            //login admin kasir
+            if (!login()) {
+                continue;
+            }
+
+            int pilihanKasir;
+
+            while (true) {
+
+                bersihkan_layar();
+
+                cout << "\n=========================================\n";
+                cout << "            MENU ADMIN KASIR\n";
+                cout << "=========================================\n";
+
+                cout << "1. Transaksi Kasir" << endl;
+                cout << "2. Riwayat Transaksi" << endl;
+                cout << "0. Kembali" << endl;
+
+                cout << "-----------------------------------------\n";
+                cout << "Pilih menu : ";
+
+                if (!(cin >> pilihanKasir)) {
+
+                    cout << "\nInput harus angka!\n";
+
+                    cin.clear();
+                    cin.ignore(1000, '\n');
+
+                    cout << "\nTekan ENTER untuk kembali...";
+                    cin.get();
+
+                    continue;
+                }
+
+                cin.ignore();
+
+                switch (pilihanKasir) {
+
+                    case 1:
+                        transaksi_kasir();
+                        break;
+
+                    case 2:
+                        tampilkan_riwayat_transaksi();
+                        break;
+
+                    case 0:
+                        break;
+
+                    default:
+                        cout << "\nMenu tidak valid!\n";
+                }
+
+                if (pilihanKasir == 0) {
+                    break;
+                }
+
+                cout << "\nTekan ENTER untuk kembali...";
+                cin.get();
+            }
+        }
+
+        else if (role == 0) {
+
+            cout << "\nTerima kasih.\n";
+            return 0;
+        }
+
+        else {
+
+            cout << "\nRole tidak valid!\n";
+            cout << "\nTekan ENTER untuk kembali...";
+            cin.get();
+        }
+    }
+
+    return 0;
+}
