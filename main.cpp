@@ -88,6 +88,29 @@ struct NodeBarang {
 	NodeBarang* next;
 };
 
+struct KategoriNode {
+	string nama;
+	string kode_kat;
+	int level;
+	KategoriNode* first_child;
+	KategoriNode* next_sibling;
+	KategoriNode* parent;
+	
+	KategoriNode(string nama, int lvl = 0) {
+        this->nama = nama;
+        this->level = lvl;
+        this->first_child = NULL;
+        this->next_sibling = NULL;
+        this->parent = NULL;
+        
+//        static int counter = 1;
+//        char buffer[20];
+//        sprintf(buffer, "KAT%03d", counter++);
+////        this->kode_kategori = string(buffer);
+    }
+};
+
+KategoriNode* rootKategori = NULL;
 NodeBarang* head = NULL;
 NodeBarang* tail = NULL;
 int next_id = 1; // auto increment id
@@ -309,7 +332,7 @@ void tambah_barang() {
             tail = new_node;
         }
 
-        tambah_log("Tambah Barang", "ID: " + to_string(new_node->data.id) + " | Nama: " + new_node->data.nama);
+//        tambah_log("Tambah Barang", "ID: " + to_string(new_node->data.id) + " | Nama: " + new_node->data.nama);
         
         cout << "\n[Barang ke-" << (i+1) << " berhasil ditambahkan!]" << endl;
         cout << "\n" << string(100, '-') << endl;
@@ -605,6 +628,28 @@ void update_barang(){
     }
 }
 
+void init_kat() {
+//	root_kat = new KategoriNode("SEMUA BARANG", 0);
+	
+	// lvl 1
+	KategoriNode* makanan_minuman = new KategoriNode("Makanan & Minuman", 1);
+	KategoriNode* rumah_tangga = new KategoriNode("Kebutuhan Rumah Tangga", 1);
+	KategoriNode* perawatan = new KategoriNode("Perawatan Diri & Kesehatan", 1);
+	KategoriNode* alat_tulis = new KategoriNode("Alat Tulis & Kantor", 1);
+	KategoriNode* lainnya = new KategoriNode("Lainnya", 1);
+	
+	root_kat->first_child = makanan_minuman;
+	makanan_minuman->next_sibling = rumah_tangga;
+	rumah_tangga->next_sibling = perawatan;
+	perawatan->next_sibling = alat_tulis;
+	alat_tulis->next_sibling = lainnya;
+	
+	makanan_minuman->parent = root_kat;
+	rumah_tangga->parent = root_kat;
+	perawatan->parent = root_kat;
+	alat_tulis->parent = root_kat;
+	lainnya->parent = root_kat;
+}
 
 
 int main() {
