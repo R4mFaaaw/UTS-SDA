@@ -836,87 +836,6 @@ void transaksi_kasir() {
     // keluar queue
     dequeueCustomer();
 }
-// Mencoba Tolong DIbenerin aja kalo updaet
-int main() {
-
-    // LOGIN ADMIN KASIR
-    if (!login()) {
-        return 0;
-    }
-
-    int pilihan;
-
-    while (true) {
-
-        bersihkan_layar();
-
-        cout << "\n=========================================\n";
-        cout << "          MENU ADMIN KASIR\n";
-        cout << "=========================================\n";
-
-        cout << "1. Transaksi Kasir" << endl;
-        cout << "2. Tampilkan Barang" << endl;
-        cout << "3. Input Barang" << endl;
-        cout << "4. Riwayat Transaksi" << endl;
-        cout << "5. Log Aktivitas" << endl;
-        cout << "0. Keluar" << endl;
-
-        cout << "-----------------------------------------\n";
-        cout << "Pilih menu : ";
-
-        // validasi input angka
-        if (!(cin >> pilihan)) {
-
-            cout << "\nInput harus angka!\n";
-
-            cin.clear();
-            cin.ignore(1000, '\n');
-
-            cout << "\nTekan ENTER untuk kembali...";
-            cin.get();
-
-            continue;
-        }
-
-        cin.ignore();
-
-        switch (pilihan) {
-
-            case 1:
-                transaksi_kasir();
-                break;
-
-            case 2:
-                tampilkan_barang();
-                break;
-
-            case 3:
-                tambah_barang();
-                break;
-
-            case 4:
-                tampilkan_riwayat_transaksi();
-                break;
-
-            case 5:
-                tampilkan_log_barang();
-                break;
-
-            case 0:
-                cout << "\nTerima kasih.\n";
-                return 0;
-
-            default:
-                cout << "\nMenu tidak valid!\n";
-        }
-
-        cout << "\nTekan ENTER untuk kembali...";
-        cin.get();
-    }
-
-    return 0;
-}
-
 int main() {
 
     int role;
@@ -951,7 +870,7 @@ int main() {
 
         cin.ignore();
 
-        //admin gudang
+        // ================= ADMIN GUDANG =================
         if (role == 1) {
 
             int pilihanGudang;
@@ -1032,10 +951,9 @@ int main() {
             }
         }
 
-        //admin kasir
+        // ================= ADMIN KASIR =================
         else if (role == 2) {
 
-            //login admin kasir
             if (!login()) {
                 continue;
             }
@@ -1051,7 +969,9 @@ int main() {
                 cout << "=========================================\n";
 
                 cout << "1. Transaksi Kasir" << endl;
-                cout << "2. Riwayat Transaksi" << endl;
+                cout << "2. Tampilkan Barang" << endl;
+                cout << "3. Riwayat Transaksi" << endl;
+                cout << "4. Log Aktivitas" << endl;
                 cout << "0. Kembali" << endl;
 
                 cout << "-----------------------------------------\n";
@@ -1079,7 +999,15 @@ int main() {
                         break;
 
                     case 2:
+                        tampilkan_barang();
+                        break;
+
+                    case 3:
                         tampilkan_riwayat_transaksi();
+                        break;
+
+                    case 4:
+                        tampilkan_log_barang();
                         break;
 
                     case 0:
@@ -1098,6 +1026,7 @@ int main() {
             }
         }
 
+        // ================= KELUAR =================
         else if (role == 0) {
 
             cout << "\nTerima kasih.\n";
