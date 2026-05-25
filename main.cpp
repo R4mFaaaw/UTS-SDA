@@ -21,7 +21,6 @@ void bersihkan_layar() {
 }
 
 struct Barang {
-    int id;
     string kode_barang;
     string nama;
     string kategori;
@@ -99,12 +98,11 @@ struct NodeBarang {
 
 NodeBarang* head = NULL;
 NodeBarang* tail = NULL;
-int next_id = 1; // auto increment id
 
 void tambah_barang();
 void tampilkan_barang();
 bool is_kosong();
-string generate_kode_barang(int id);
+string generate_kode_barang();
 //void edit_barang();
 
 Barang br;
@@ -114,9 +112,12 @@ bool is_kosong() {
     return head == NULL;
 }
 
-string generate_kode_barang(int id) {
-	char buffer[20];
-    sprintf(buffer, "BRG%04d", id); 
+string generate_kode_barang() {
+    static int nomor = 1;
+
+    char buffer[20];
+    sprintf(buffer, "BRG%03d", nomor++);
+
     return string(buffer);
 }
 
@@ -186,8 +187,7 @@ void tambah_barang() {
     for (int i = 0; i < jumlah; i++) {
         cout << "\nMasukkan data ke-" << (i+1) << ": \n";
         
-        br.id = next_id++;
-        br.kode_barang = generate_kode_barang(br.id);
+        br.kode_barang = generate_kode_barang();
         
         cout << "Kode barang (otomatis): " << br.kode_barang << endl;
         
@@ -319,7 +319,7 @@ void tambah_barang() {
             tail = new_node;
         }
 
-        tambah_log("Tambah Barang", "ID: " + to_string(new_node->data.id) + " | Nama: " + new_node->data.nama);
+        tambah_log("Tambah Barang", "Kode: " + new_node->data.kode_barang + " | Nama: " + new_node->data.nama);
         
         cout << "\n[Barang ke-" << (i+1) << " berhasil ditambahkan!]" << endl;
         cout << "\n" << string(100, '-') << endl;
@@ -337,7 +337,6 @@ void tampilkan_barang() {
     cout << string(148, '=') << endl;
 
     cout << left << setw(5)  << "No"
-         << setw(8)  << "ID"
          << setw(12) << "Kode"
          << setw(20) << "Nama"
          << setw(15) << "Kategori"
@@ -355,7 +354,6 @@ void tampilkan_barang() {
 
     while (current != NULL) {
         cout << left << setw(5)  << no++
-             << setw(8)  << current->data.id
              << setw(12) << current->data.kode_barang
              << setw(20) << current->data.nama
              << setw(15) << current->data.kategori
@@ -618,66 +616,74 @@ void update_barang(){
         tambah_log("Update Barang", "Update pada kode: " + kode);
     }
 }
-// Irena : Login Admin untuk Kasir
-// ceritanya dibatasin hanya ada 4 kasir
-// menggunakan array
-struct Admin {
+ 
+struct User {
     string username;
     string password;
+    string role;
 };
 
-Admin adminKasir[3] = {
-    {"kasir1", "111111"},
-    {"kasir2", "222222"},
-    {"kasir3", "333333"}
+User users[3] = {
+    {"gudang", "123", "Admin Gudang"},
+    {"kasir", "123", "Kasir"},
+    {"customer", "123", "Customer"}
 };
 
-bool login() {
+string login() {
+
     string username, password;
+
     int percobaan = 0;
 
-    while (percobaan < 3) {
+    while (true) {
+
         bersihkan_layar();
 
         cout << "=====================================\n";
-        cout << "        LOGIN ADMIN KASIR\n";
+        cout << "              LOGIN\n";
         cout << "=====================================\n";
+
+        cout << "Ketik '0' pada username untuk keluar\n\n";
 
         cout << "Username : ";
         getline(cin, username);
 
+        // pilihan keluar
+        if (username == "0") {
+            return "Keluar";
+        }
+
         cout << "Password : ";
         getline(cin, password);
 
-        bool berhasil = false;
-
         for (int i = 0; i < 3; i++) {
-            if (username == adminKasir[i].username &&
-                password == adminKasir[i].password) {
 
-                berhasil = true;
-                break;
+            if (username == users[i].username &&
+                password == users[i].password) {
+
+                cout << "\nLogin berhasil sebagai "
+                     << users[i].role << "!\n";
+
+                return users[i].role;
             }
         }
 
-        if (berhasil) {
-            cout << "\nLogin berhasil!\n";
-            return true;
-        } else {
-            percobaan++;
-            cout << "\nUsername atau password salah!\n";
-            cout << "Sisa percobaan: " << (3 - percobaan) << endl;
+        percobaan++;
 
-            if (percobaan < 3) {
-                cout << "Tekan ENTER untuk coba lagi...";
-                cin.get();
-            }
+        cout << "\nUsername atau password salah!\n";
+        cout << "Sisa percobaan: "
+             << (3 - percobaan) << endl;
+
+        if (percobaan >= 3) {
+            cout << "\nTerlalu banyak percobaan login.\n";
+            return "Keluar";
         }
+
+        cout << "Tekan ENTER untuk coba lagi...";
+        cin.get();
     }
-
-    cout << "\nAnda gagal login 3 kali.\n";
-    return false;
 }
+
 //  Kasir men input data untuk costumer yang melakukan transaksi secara OFFLINE
 // queue dan STackk
 struct QueueCustomer {
@@ -836,42 +842,21 @@ void transaksi_kasir() {
     // keluar queue
     dequeueCustomer();
 }
-int main() {
 
-    int role;
+int main() {
 
     while (true) {
 
-        bersihkan_layar();
+        string roleUser = login();
 
-        cout << "\n=========================================\n";
-        cout << "     SISTEM MANAJEMEN MINIMARKET\n";
-        cout << "=========================================\n";
-
-        cout << "1. Admin Gudang" << endl;
-        cout << "2. Admin Kasir" << endl;
-        cout << "0. Keluar" << endl;
-
-        cout << "-----------------------------------------\n";
-        cout << "Pilih role : ";
-
-        if (!(cin >> role)) {
-
-            cout << "\nInput harus angka!\n";
-
-            cin.clear();
-            cin.ignore(1000, '\n');
-
-            cout << "\nTekan ENTER untuk kembali...";
-            cin.get();
-
-            continue;
+        // pilihan keluar dari login
+        if (roleUser == "Keluar") {
+            cout << "\nProgram selesai.\n";
+            break;
         }
-
-        cin.ignore();
-
+        
         // ================= ADMIN GUDANG =================
-        if (role == 1) {
+        if (roleUser == "Admin Gudang") {
 
             int pilihanGudang;
 
@@ -889,24 +874,12 @@ int main() {
                 cout << "4. Update Barang" << endl;
                 cout << "5. Cari Barang" << endl;
                 cout << "6. Log Aktivitas" << endl;
-                cout << "0. Kembali" << endl;
+                cout << "0. Logout" << endl;
 
                 cout << "-----------------------------------------\n";
                 cout << "Pilih menu : ";
 
-                if (!(cin >> pilihanGudang)) {
-
-                    cout << "\nInput harus angka!\n";
-
-                    cin.clear();
-                    cin.ignore(1000, '\n');
-
-                    cout << "\nTekan ENTER untuk kembali...";
-                    cin.get();
-
-                    continue;
-                }
-
+                cin >> pilihanGudang;
                 cin.ignore();
 
                 switch (pilihanGudang) {
@@ -952,11 +925,7 @@ int main() {
         }
 
         // ================= ADMIN KASIR =================
-        else if (role == 2) {
-
-            if (!login()) {
-                continue;
-            }
+        else if (roleUser == "Kasir") {
 
             int pilihanKasir;
 
@@ -972,24 +941,12 @@ int main() {
                 cout << "2. Tampilkan Barang" << endl;
                 cout << "3. Riwayat Transaksi" << endl;
                 cout << "4. Log Aktivitas" << endl;
-                cout << "0. Kembali" << endl;
+                cout << "0. Logout" << endl;
 
                 cout << "-----------------------------------------\n";
                 cout << "Pilih menu : ";
 
-                if (!(cin >> pilihanKasir)) {
-
-                    cout << "\nInput harus angka!\n";
-
-                    cin.clear();
-                    cin.ignore(1000, '\n');
-
-                    cout << "\nTekan ENTER untuk kembali...";
-                    cin.get();
-
-                    continue;
-                }
-
+                cin >> pilihanKasir;
                 cin.ignore();
 
                 switch (pilihanKasir) {
@@ -1026,18 +983,53 @@ int main() {
             }
         }
 
-        // ================= KELUAR =================
-        else if (role == 0) {
+        // ================= CUSTOMER =================
+        else if (roleUser == "Customer") {
 
-            cout << "\nTerima kasih.\n";
-            return 0;
-        }
+            int pilihanCustomer;
 
-        else {
+            while (true) {
 
-            cout << "\nRole tidak valid!\n";
-            cout << "\nTekan ENTER untuk kembali...";
-            cin.get();
+                bersihkan_layar();
+
+                cout << "\n=========================================\n";
+                cout << "              MENU CUSTOMER\n";
+                cout << "=========================================\n";
+
+                cout << "1. Lihat Barang" << endl;
+                cout << "2. Cari Barang" << endl;
+                cout << "0. Logout" << endl;
+
+                cout << "-----------------------------------------\n";
+                cout << "Pilih menu : ";
+
+                cin >> pilihanCustomer;
+                cin.ignore();
+
+                switch (pilihanCustomer) {
+
+                    case 1:
+                        tampilkan_barang();
+                        break;
+
+                    case 2:
+                        cari_barang();
+                        break;
+
+                    case 0:
+                        break;
+
+                    default:
+                        cout << "\nMenu tidak valid!\n";
+                }
+
+                if (pilihanCustomer == 0) {
+                    break;
+                }
+
+                cout << "\nTekan ENTER untuk kembali...";
+                cin.get();
+            }
         }
     }
 
