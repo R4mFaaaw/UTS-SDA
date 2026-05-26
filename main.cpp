@@ -876,6 +876,18 @@ struct Keranjang {
 
 Keranjang* headKeranjang = NULL;
 Keranjang* tailKeranjang = NULL;
+
+struct status_pesanan {
+    string nama_customer;
+    string nama_barang;
+    int jumlah;
+    string status;
+    status_pesanan* next;
+};
+
+status_pesanan* headPesanan = NULL;
+status_pesanan* tailPesanan = NULL;
+
 void tambah_ke_keranjang() {
 
     bersihkan_layar();
