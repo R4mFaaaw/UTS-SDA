@@ -128,29 +128,6 @@ struct NodeBarang {
 	NodeBarang* next;
 };
 
-struct KategoriNode {
-	string nama;
-	string kode_kat;
-	int level;
-	KategoriNode* first_child;
-	KategoriNode* next_sibling;
-	KategoriNode* parent;
-	
-	KategoriNode(string nama, int lvl = 0) {
-        this->nama = nama;
-        this->level = lvl;
-        this->first_child = NULL;
-        this->next_sibling = NULL;
-        this->parent = NULL;
-        
-//        static int counter = 1;
-//        char buffer[20];
-//        sprintf(buffer, "KAT%03d", counter++);
-////        this->kode_kategori = string(buffer);
-    }
-};
-
-KategoriNode* rootKategori = NULL;
 NodeBarang* head = NULL;
 NodeBarang* tail = NULL;
 int next_id = 1;
