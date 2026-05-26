@@ -1,15 +1,23 @@
+<<<<<<< HEAD
 # Compiled Executables
 *.exe
 *.out
 *.app
+main
 
-# Intermediate Objects
-*.o
-*.obj
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
 
-# Visual Studio Code
 .vscode/
-.history/
+
+.vs/
+*.user
+*.userosscache
+*.sln
+*.vcxproj
+
+
 *.log
 
 # IDE - Dev-C++ 
@@ -19,3 +27,26 @@
 # OS generated files
 .DS_Store
 Thumbs.db
+=======
+
+*.exe
+*.out
+*.app
+main
+
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+
+.vscode/
+
+.vs/
+*.user
+*.userosscache
+*.sln
+*.vcxproj
+
+
+*.log
+*.tmp
+>>>>>>> d3f12b70ae2554320f32955707faa2f564776c4d
