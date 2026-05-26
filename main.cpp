@@ -953,29 +953,19 @@ struct Keranjang {
 Keranjang* headKeranjang = NULL;
 Keranjang* tailKeranjang = NULL;
 
-struct status_pesanan {
-    string nama_customer;
-    string nama_barang;
-    int jumlah;
-    string status;
-    status_pesanan* next;
-};
-
-status_pesanan* headPesanan = NULL;
-status_pesanan* tailPesanan = NULL;
-
 struct RiwayatCustomer {
     string nama_customer;
     string barang;
     int jumlah;
     double total;
+    string status;
     RiwayatCustomer* next;
 };
 
 RiwayatCustomer* headRiwayat = NULL;
 RiwayatCustomer* tailRiwayat = NULL;
 
-void tambah_riwayat_customer(string nama, string barang, int jumlah, double total) {
+void tambah_riwayat_customer(string nama, string barang, int jumlah, double total, string status) {
 
     RiwayatCustomer* baru = new RiwayatCustomer();
 
@@ -983,6 +973,7 @@ void tambah_riwayat_customer(string nama, string barang, int jumlah, double tota
     baru->barang = barang;
     baru->jumlah = jumlah;
     baru->total = total;
+    baru->status = status;
     baru->next = NULL;
 
     if (headRiwayat == NULL) {
@@ -1020,6 +1011,7 @@ void tampilkan_riwayat_customer(string namaCustomer) {
                  << current->barang
                  << " | Jumlah: " << current->jumlah
                  << " | Total: Rp" << current->total
+                 << " | Status: " << current->status
                  << endl;
 
             ditemukan = true;
@@ -1106,7 +1098,8 @@ void tambah_ke_keranjang() {
         "customer",
         current->data.nama,
         jumlah,
-        total
+        total,
+        "Diproses"
     );
 }
 void tampilkan_keranjang() {
