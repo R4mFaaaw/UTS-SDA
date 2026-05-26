@@ -977,6 +977,64 @@ void tampilkan_keranjang() {
     cout << "================================\n";
     cout << "Total Belanja : Rp" << grandTotal << endl;
 }
+
+void hapus_keranjang(){
+
+    bersihkan_layar();
+
+    if (headKeranjang == NULL){
+        cout << "Keranjang masih kosong!\n";
+        return;
+    }
+
+    tampilkan_keranjang();
+
+    string nama;
+
+    cout << "\nBarang yang ingin dihapus: ";
+    getline(cin, nama);
+
+    Keranjang* current = headKeranjang;
+    Keranjang* prev = NULL;
+
+    while (current != NULL){
+
+        if (toLowerCase(current->nama_barang)
+            == toLowerCase(nama)){
+            break;
+        }
+
+        prev = current;
+        current = current->next;
+    }
+
+    // tidak ditemukan
+    if (current == NULL){
+        cout << "\nBarang tidak ditemukan di keranjang!\n";
+        return;
+    }
+
+    // ditemukan
+    if (current == headKeranjang) {
+        headKeranjang = headKeranjang->next;
+
+        if (headKeranjang == NULL) {
+            tailKeranjang = NULL;
+        }
+    }
+    else {
+        prev->next = current->next;
+
+        if (current == tailKeranjang) {
+            tailKeranjang = prev;
+        }
+    }
+
+    delete current;
+
+    cout << "\nBarang berhasil dihapus dari keranjang!\n";
+}
+
 // 2. cari barang berdasarkan nama untuk customer
 void cari_barang_customer() {
 
@@ -1194,6 +1252,7 @@ int main() {
                 cout << "2. Cari Barang" << endl;
                 cout << "3. Tambah Keranjang" << endl;
                 cout << "4. Tampilkan Keranjang" << endl;
+                cout << "5. Hapus Keranjang" << endl;
 
                 cout << "0. Logout" << endl;
 
@@ -1218,6 +1277,10 @@ int main() {
 
                     case 4:
                         tampilkan_keranjang();
+                        break;
+
+                    case 5:
+                        hapus_keranjang();
                         break;
 
                     case 0:
