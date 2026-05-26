@@ -108,6 +108,7 @@ void tambah_barang();
 void tampilkan_barang();
 bool is_kosong();
 string generate_kode_barang();
+void register_user();
 //void edit_barang();
 
 Barang br;
@@ -638,65 +639,140 @@ struct User {
     string role;
 };
 
-User users[3] = {
+User users[100] = {
     {"gudang", "123", "Admin Gudang"},
     {"kasir", "123", "Kasir"},
     {"customer", "123", "Customer"}
 };
 
+int jumlahUser = 3;
+
 string login() {
-
-    string username, password;
-
-    int percobaan = 0;
 
     while (true) {
 
         bersihkan_layar();
 
+        int pilih;
+
         cout << "=====================================\n";
-        cout << "              LOGIN\n";
+        cout << "        SISTEM MINIMARKET\n";
         cout << "=====================================\n";
 
-        cout << "Ketik '0' pada username untuk keluar\n\n";
+        cout << "1. Login\n";
+        cout << "2. Register\n";
+        cout << "0. Keluar\n";
 
-        cout << "Username : ";
-        getline(cin, username);
+        cout << "\nPilih menu : ";
+        cin >> pilih;
+        cin.ignore();
 
-        // pilihan keluar
-        if (username == "0") {
+        if (pilih == 0) {
             return "Keluar";
         }
 
-        cout << "Password : ";
-        getline(cin, password);
+        else if (pilih == 2) {
 
-        for (int i = 0; i < 3; i++) {
+            register_user();
 
-            if (username == users[i].username &&
-                password == users[i].password) {
+            cout << "\nTekan ENTER untuk lanjut...";
+            cin.get();
 
-                cout << "\nLogin berhasil sebagai "
-                     << users[i].role << "!\n";
+            continue;
+        }
 
-                return users[i].role;
+        else if (pilih == 1) {
+
+            string username, password;
+
+            cout << "\nUsername : ";
+            getline(cin, username);
+
+            cout << "Password : ";
+            getline(cin, password);
+
+            for (int i = 0; i < jumlahUser; i++) {
+
+                if (username == users[i].username &&
+                    password == users[i].password) {
+
+                    cout << "\nLogin berhasil sebagai "
+                         << users[i].role << "!\n";
+
+                    return users[i].role;
+                }
             }
+
+            cout << "\nUsername atau password salah!\n";
+
+            cout << "Tekan ENTER untuk coba lagi...";
+            cin.get();
         }
 
-        percobaan++;
-
-        cout << "\nUsername atau password salah!\n";
-        cout << "Sisa percobaan: "
-             << (3 - percobaan) << endl;
-
-        if (percobaan >= 3) {
-            cout << "\nTerlalu banyak percobaan login.\n";
-            return "Keluar";
+        else {
+            cout << "\nMenu tidak valid!\n";
+            cin.get();
         }
-
-        cout << "Tekan ENTER untuk coba lagi...";
-        cin.get();
     }
+}
+
+void register_user() {
+
+    bersihkan_layar();
+
+    string username, password;
+    int role;
+
+    cout << "=====================================\n";
+    cout << "             REGISTER\n";
+    cout << "=====================================\n";
+
+    cout << "Username : ";
+    getline(cin, username);
+
+    // cek username sudah ada atau belum
+    for (int i = 0; i < jumlahUser; i++) {
+
+        if (users[i].username == username) {
+            cout << "\nUsername sudah digunakan!\n";
+            return;
+        }
+    }
+
+    cout << "Password : ";
+    getline(cin, password);
+
+    cout << "\nPilih Role\n";
+    cout << "1. Admin Gudang\n";
+    cout << "2. Kasir\n";
+    cout << "3. Customer\n";
+    cout << "Pilih : ";
+    cin >> role;
+    cin.ignore();
+
+    string roleUser;
+
+    if (role == 1) {
+        roleUser = "Admin Gudang";
+    }
+    else if (role == 2) {
+        roleUser = "Kasir";
+    }
+    else if (role == 3) {
+        roleUser = "Customer";
+    }
+    else {
+        cout << "\nRole tidak valid!\n";
+        return;
+    }
+
+    users[jumlahUser].username = username;
+    users[jumlahUser].password = password;
+    users[jumlahUser].role = roleUser;
+
+    jumlahUser++;
+
+    cout << "\nRegister berhasil!\n";
 }
 
 // ==============================
@@ -888,6 +964,76 @@ struct status_pesanan {
 status_pesanan* headPesanan = NULL;
 status_pesanan* tailPesanan = NULL;
 
+struct RiwayatCustomer {
+    string nama_customer;
+    string barang;
+    int jumlah;
+    double total;
+    RiwayatCustomer* next;
+};
+
+RiwayatCustomer* headRiwayat = NULL;
+RiwayatCustomer* tailRiwayat = NULL;
+
+void tambah_riwayat_customer(string nama, string barang, int jumlah, double total) {
+
+    RiwayatCustomer* baru = new RiwayatCustomer();
+
+    baru->nama_customer = nama;
+    baru->barang = barang;
+    baru->jumlah = jumlah;
+    baru->total = total;
+    baru->next = NULL;
+
+    if (headRiwayat == NULL) {
+        headRiwayat = tailRiwayat = baru;
+    }
+    else {
+        tailRiwayat->next = baru;
+        tailRiwayat = baru;
+    }
+}
+
+
+void tampilkan_riwayat_customer(string namaCustomer) {
+
+    bersihkan_layar();
+
+    if (headRiwayat == NULL) {
+        cout << "Belum ada riwayat pembelian.\n";
+        return;
+    }
+
+    RiwayatCustomer* current = headRiwayat;
+
+    bool ditemukan = false;
+    int no = 1;
+
+    cout << "\n======= RIWAYAT PEMBELIAN =======\n";
+
+    while (current != NULL) {
+
+        if (toLowerCase(current->nama_customer)
+            == toLowerCase(namaCustomer)) {
+
+            cout << no++ << ". "
+                 << current->barang
+                 << " | Jumlah: " << current->jumlah
+                 << " | Total: Rp" << current->total
+                 << endl;
+
+            ditemukan = true;
+        }
+
+        current = current->next;
+    }
+
+    if (!ditemukan) {
+        cout << "\nBelum ada transaksi.\n";
+    }
+}
+
+
 void tambah_ke_keranjang() {
 
     bersihkan_layar();
@@ -953,6 +1099,15 @@ void tambah_ke_keranjang() {
     }
 
     cout << "\nBarang berhasil ditambahkan ke keranjang!\n";
+   
+    double total = jumlah * current->data.harga_jual;
+
+    tambah_riwayat_customer(
+        "customer",
+        current->data.nama,
+        jumlah,
+        total
+    );
 }
 void tampilkan_keranjang() {
 
@@ -1265,6 +1420,7 @@ int main() {
                 cout << "3. Tambah Keranjang" << endl;
                 cout << "4. Tampilkan Keranjang" << endl;
                 cout << "5. Hapus Keranjang" << endl;
+                cout << "6. Riwayat Pembelian" << endl;
 
                 cout << "0. Logout" << endl;
 
@@ -1294,6 +1450,10 @@ int main() {
                     case 5:
                         hapus_keranjang();
                         break;
+
+                    case 6:
+                        tampilkan_riwayat_customer("customer");
+                         break;
 
                     case 0:
                         break;
