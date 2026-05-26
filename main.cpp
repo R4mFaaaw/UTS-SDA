@@ -26,6 +26,7 @@ void bersihkan_layar() {
 // ========================
 
 struct Barang {
+	int id;
     string kode_barang;
     string nama;
     string kategori;
@@ -45,8 +46,34 @@ struct LogBarang {
     LogBarang* prev;
 };
 
+
+// Struktur Node untuk Kategori Tree
+struct KategoriNode {
+    string nama;
+    string kode_kat;  // misal: CAT001, CAT002
+    int level;             // depth level
+    KategoriNode* first_child;  // anak pertama
+    KategoriNode* next_sibling; // saudara berikutnya
+    KategoriNode* parent;      // orang tua
+    
+    KategoriNode(string nama, int lvl = 0) {
+        this->nama = nama;
+        this->level = lvl;
+        this->first_child = NULL;
+        this->next_sibling = NULL;
+        this->parent = NULL;
+        
+        // generate kode kategori sederhana
+        static int counter = 1;
+        char buffer[20];
+        sprintf(buffer, "CAT%03d", counter++);
+        this->kode_kat = string(buffer);
+    }
+};
+
 LogBarang* logHead = NULL;
 LogBarang* logTail = NULL;
+KategoriNode* root_kat = NULL;
 
 void tambah_log(string aksi, string detail) {
     LogBarang* baru = new LogBarang;
@@ -103,6 +130,7 @@ struct NodeBarang {
 
 NodeBarang* head = NULL;
 NodeBarang* tail = NULL;
+int next_id = 1;
 
 void tambah_barang();
 void tampilkan_barang();
@@ -180,6 +208,122 @@ bool is_future_date(const string& date) {
     return true;
 }
 
+void init_kat() {
+	root_kat = new KategoriNode("SEMUA BARANG", 0);
+	
+	// lvl 1
+	KategoriNode* makanan_minuman = new KategoriNode("Makanan & Minuman", 1);
+	KategoriNode* rumah_tangga = new KategoriNode("Kebutuhan Rumah Tangga", 1);
+	KategoriNode* perawatan = new KategoriNode("Perawatan Diri & Kesehatan", 1);
+	KategoriNode* alat_tulis = new KategoriNode("Alat Tulis & Kantor", 1);
+	KategoriNode* lainnya = new KategoriNode("Lainnya", 1);
+	
+	root_kat->first_child = makanan_minuman;
+	makanan_minuman->next_sibling = rumah_tangga;
+	rumah_tangga->next_sibling = perawatan;
+	perawatan->next_sibling = alat_tulis;
+	alat_tulis->next_sibling = lainnya;
+	
+	makanan_minuman->parent = root_kat;
+	rumah_tangga->parent = root_kat;
+	perawatan->parent = root_kat;
+	alat_tulis->parent = root_kat;
+	lainnya->parent = root_kat;
+}
+
+void tampilkan_kategori_tree(KategoriNode* node, string prefix = "", bool isLast = true) {
+    if (node == NULL) return;
+    
+    cout << prefix;
+    cout << (isLast ? "└── " : "├── ");
+    cout << node->nama << " (" << node->kode_kat << ")" << endl;
+    
+    string childPrefix = prefix + (isLast ? "    " : "│   ");
+    
+    KategoriNode* child = node->first_child;
+    while (child != NULL) {
+        bool isLastChild = (child->next_sibling == NULL);
+        tampilkan_kategori_tree(child, childPrefix, isLastChild);
+        child = child->next_sibling;
+    }
+}
+
+// Mencari kategori berdasarkan kode
+KategoriNode* cari_kategori_by_kode(KategoriNode* node, string kode) {
+    if (node == NULL) return NULL;
+    if (node->kode_kat == kode) return node;
+    
+    KategoriNode* found = cari_kategori_by_kode(node->first_child, kode);
+    if (found != NULL) return found;
+    
+    return cari_kategori_by_kode(node->next_sibling, kode);
+}
+
+
+// Mendapatkan path lengkap kategori (root > child > subchild)
+string get_kategori_path(KategoriNode* node) {
+    if (node == NULL) return "";
+    if (node->parent == NULL || node->nama == "SEMUA BARANG") 
+        return node->nama;
+    
+    return get_kategori_path(node->parent) + " > " + node->nama;
+}
+
+// Menampilkan kategori berdasarkan level
+void tampilkan_kategori_by_level(KategoriNode* node, int targetLevel, int currentLevel = 0) {
+    if (node == NULL) return;
+    
+    if (currentLevel == targetLevel && node->nama != "SEMUA BARANG") {
+        string indent = "";
+        for (int i = 0; i < currentLevel; i++) indent += "  ";
+        cout << indent << "• " << node->nama << " (" << node->kode_kat << ")" << endl;
+    }
+    
+    tampilkan_kategori_by_level(node->first_child, targetLevel, currentLevel + 1);
+    tampilkan_kategori_by_level(node->next_sibling, targetLevel, currentLevel);
+}
+
+void tampilkan_leaf_kategori(KategoriNode* node) {
+    if (node == NULL) return;
+    
+    // Jika tidak punya anak dan bukan root, dia leaf
+    if (node->first_child == NULL && node->nama != "SEMUA BARANG") {
+        cout << "  • " << get_kategori_path(node) << endl;
+    }
+    
+    tampilkan_leaf_kategori(node->first_child);
+    tampilkan_leaf_kategori(node->next_sibling);
+}
+
+void pilih_kategori_dari_tree(string &kategori_terpilih) {
+    cout << "\n=== DAFTAR KATEGORI (LEAF) ===\n";
+    cout << "(Hanya kategori paling bawah yang bisa dipilih)\n\n";
+    tampilkan_leaf_kategori(root_kat);
+    
+    string input_kode;
+    bool found = false;
+    
+    while (!found) {
+        cout << "\nMasukkan KODE kategori yang dipilih: ";
+        cin >> input_kode;
+        
+        // Cari kategori berdasarkan kode
+        KategoriNode* kat = cari_kategori_by_kode(root_kat, input_kode);
+        
+        if (kat != NULL && kat->first_child == NULL) {
+            kategori_terpilih = kat->nama;
+            cout << "\n✓ Kategori terpilih: " << kategori_terpilih << " (" << kat->kode_kat << ")" << endl;
+            found = true;
+        } else if (kat != NULL && kat->first_child != NULL) {
+            cout << "\n✗ '" << kat->nama << "' BUKAN kategori leaf (masih memiliki subkategori)!" << endl;
+            cout << "  Silakan pilih kategori paling bawah (tidak memiliki anak).\n";
+        } else {
+            cout << "\n✗ Kode kategori '" << input_kode << "' tidak ditemukan!" << endl;
+            cout << "  Silakan masukkan kode yang benar dari daftar.\n";
+        }
+    }
+}
+
 void tambah_barang() {
     bersihkan_layar();
     int jumlah;
@@ -191,123 +335,124 @@ void tambah_barang() {
     cout << "\n=== TAMBAH BARANG ===\n";
     
     for (int i = 0; i < jumlah; i++) {
+        Barang br;
         cout << "\nMasukkan data ke-" << (i+1) << ": \n";
         
+        br.id = next_id++;
         br.kode_barang = generate_kode_barang();
         
         cout << "Kode barang (otomatis): " << br.kode_barang << endl;
         
         cout << "> Nama barang: "; 
-		getline(cin, br.nama);
-		while(br.nama.empty()) {
-    		cout << "Nama tidak boleh kosong! Masukkan lagi: ";
-    		getline(cin, br.nama);
-		}
+        getline(cin, br.nama);
+        while(br.nama.empty()) {
+            cout << "Nama tidak boleh kosong! Masukkan lagi: ";
+            getline(cin, br.nama);
+        }
         
-        cout << "> Kategori [Enter jika lainnya]: "; 
-        getline(cin, br.kategori);
-        if(br.kategori.empty()) br.kategori = "Lainnya";
+        // Pilih kategori dari tree
+        pilih_kategori_dari_tree(br.kategori);
         
         string input;
-		while (true) {
-    		cout << "> Harga beli: ";
-    		getline(cin, input);
+        while (true) {
+            cout << "> Harga beli: ";
+            getline(cin, input);
 
-    		if (input.empty()) {
-        		cout << "Input tidak boleh kosong! Masukkan lagi: \n";
-        		continue;
-    		}
+            if (input.empty()) {
+                cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+                continue;
+            }
 
-    		bool valid = true;
-    		for (int i = 0; i < input.length(); i++) {
-        		if (!isdigit(input[i]) && input[i] != '.') {
-            		valid = false;
-            		break;
-        		}	
-    		}
+            bool valid = true;
+            for (int i = 0; i < input.length(); i++) {
+                if (!isdigit(input[i]) && input[i] != '.') {
+                    valid = false;
+                    break;
+                }	
+            }
 
-    		if (!valid) {
-        		cout << "Input harus angka! Masukkan lagi: \n";
-        		continue;
-    		}
+            if (!valid) {
+                cout << "Input harus angka! Masukkan lagi: \n";
+                continue;
+            }
 
-    		br.harga_beli = atof(input.c_str());
-    		break;
-		}
-		
-		while (true) {
-    		cout << "> Harga jual: ";
-    		getline(cin, input);
-
-    		if (input.empty()) {
-        		cout << "Input tidak boleh kosong! Masukkan lagi: \n";
-        		continue;
-    		}
-
-    		bool valid = true;
-    		for (int i = 0; i < input.length(); i++) {
-        		if (!isdigit(input[i]) && input[i] != '.') {
-            		valid = false;
-            		break;
-        		}	
-    		}
-
-    		if (!valid) {
-        		cout << "Input harus angka! Masukkan lagi: \n";
-        		continue;
-    		}
-
-    		br.harga_jual = atof(input.c_str());
-    		break;
-		}
+            br.harga_beli = atof(input.c_str());
+            break;
+        }
         
         while (true) {
-    		cout << "> Stok awal: ";
-    		getline(cin, input);
+            cout << "> Harga jual: ";
+            getline(cin, input);
 
-		    if (input.empty()) {
-		        cout << "Input tidak boleh kosong! Masukkan lagi: \n";
-		        continue;
-    		}
+            if (input.empty()) {
+                cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+                continue;
+            }
 
-    		bool valid = true;
-    		for (int i = 0; i < input.length(); i++) {
-        		if (!isdigit(input[i])) {
-            		valid = false;
-            		break;
-        		}
-    		}	
+            bool valid = true;
+            for (int i = 0; i < input.length(); i++) {
+                if (!isdigit(input[i]) && input[i] != '.') {
+                    valid = false;
+                    break;
+                }	
+            }
 
-    		if (!valid) {
-        		cout << "Input harus angka! Masukkan lagi: \n";
-        		continue;
-    		}
+            if (!valid) {
+                cout << "Input harus angka! Masukkan lagi: \n";
+                continue;
+            }
 
-    		br.stok = atoi(input.c_str());
-    		break;
-		}
+            br.harga_jual = atof(input.c_str());
+            break;
+        }
+        
+        while (true) {
+            cout << "> Stok awal: ";
+            getline(cin, input);
+
+            if (input.empty()) {
+                cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+                continue;
+            }
+
+            bool valid = true;
+            for (int i = 0; i < input.length(); i++) {
+                if (!isdigit(input[i])) {
+                    valid = false;
+                    break;
+                }
+            }	
+
+            if (!valid) {
+                cout << "Input harus angka! Masukkan lagi: \n";
+                continue;
+            }
+
+            br.stok = atoi(input.c_str());
+            break;
+        }
                 
         cout << "> Satuan [Enter jika pcs]: "; 
         getline(cin, br.satuan);
         if(br.satuan.empty()) br.satuan = "pcs";
         
         cout << "> Tanggal kadaluarsa (DD-MM-YYYY) [Enter jika tidak ada]: ";
-		getline(cin, br.tanggal_kadaluarsa);
+        getline(cin, br.tanggal_kadaluarsa);
 
-		if(br.tanggal_kadaluarsa.empty()) {
-    		br.tanggal_kadaluarsa = "-";
-		} else {
-    		while(true) {
-        		if(!is_valid_date_format(br.tanggal_kadaluarsa)) {
-            		cout << "Format tanggal salah! Gunakan DD-MM-YYYY: ";
-        		} else if(!is_future_date(br.tanggal_kadaluarsa)) {
-            		cout << "Tanggal tidak boleh kurang dari hari ini! Masukkan lagi: ";
-        		} else {
-            		break;
-        		}
-        		getline(cin, br.tanggal_kadaluarsa);
-    		}
-		}
+        if(br.tanggal_kadaluarsa.empty()) {
+            br.tanggal_kadaluarsa = "-";
+        } else {
+            while(true) {
+                if(!is_valid_date_format(br.tanggal_kadaluarsa)) {
+                    cout << "Format tanggal salah! Gunakan DD-MM-YYYY: ";
+                } else if(!is_future_date(br.tanggal_kadaluarsa)) {
+                    cout << "Tanggal tidak boleh kurang dari hari ini! Masukkan lagi: ";
+                } else {
+                    break;
+                }
+                getline(cin, br.tanggal_kadaluarsa);
+            }
+        }
         
         cout << "> Supplier [Enter jika tidak ada]: "; 
         getline(cin, br.supplier);
@@ -325,7 +470,7 @@ void tambah_barang() {
             tail = new_node;
         }
 
-        tambah_log("Tambah Barang", "Kode: " + new_node->data.kode_barang + " | Nama: " + new_node->data.nama);
+        tambah_log("Tambah Barang", "Kode: " + new_node->data.kode_barang + " | Nama: " + new_node->data.nama + " | Kategori: " + new_node->data.kategori);
         
         cout << "\n[Barang ke-" << (i+1) << " berhasil ditambahkan!]" << endl;
         cout << "\n" << string(100, '-') << endl;
@@ -1256,32 +1401,83 @@ void cari_barang_customer() {
     }
 }
 
-void init_kat() {
-//	root_kat = new KategoriNode("SEMUA BARANG", 0);
-	
-	// lvl 1
-	KategoriNode* makanan_minuman = new KategoriNode("Makanan & Minuman", 1);
-	KategoriNode* rumah_tangga = new KategoriNode("Kebutuhan Rumah Tangga", 1);
-	KategoriNode* perawatan = new KategoriNode("Perawatan Diri & Kesehatan", 1);
-	KategoriNode* alat_tulis = new KategoriNode("Alat Tulis & Kantor", 1);
-	KategoriNode* lainnya = new KategoriNode("Lainnya", 1);
-	
-	root_kat->first_child = makanan_minuman;
-	makanan_minuman->next_sibling = rumah_tangga;
-	rumah_tangga->next_sibling = perawatan;
-	perawatan->next_sibling = alat_tulis;
-	alat_tulis->next_sibling = lainnya;
-	
-	makanan_minuman->parent = root_kat;
-	rumah_tangga->parent = root_kat;
-	perawatan->parent = root_kat;
-	alat_tulis->parent = root_kat;
-	lainnya->parent = root_kat;
+// Menampilkan kategori (preorder traversal dengan indikator garis)
+void tampilkan_kategori(KategoriNode* node, string prefix = "", bool isLast = true) {
+    if (node == NULL) return;
+    
+    // Cetak node saat ini
+    cout << prefix;
+    cout << (isLast ? "+-- " : "+-- ");
+    cout << node->nama << " (" << node->kode_kat << ")" << endl;
+    
+    // Siapkan prefix untuk anak-anak
+    string childPrefix = prefix + (isLast ? "    " : "¦   ");
+    
+    // Rekursif ke anak-anak (first_child dan next_sibling-nya)
+    KategoriNode* child = node->first_child;
+    while (child != NULL) {
+        bool isLastChild = (child->next_sibling == NULL);
+        tampilkan_kategori(child, childPrefix, isLastChild);
+        child = child->next_sibling;
+    }
 }
 
+// Mencari kategori berdasarkan nama (dengan path lengkap)
+KategoriNode* cari_kategori(KategoriNode* node, string nama) {
+    if (node == NULL) return NULL;
+    if (node->nama == nama) return node;
+    
+    // Cari di anak
+    KategoriNode* found = cari_kategori(node->first_child, nama);
+    if (found != NULL) return found;
+    
+    // Cari di saudara
+    return cari_kategori(node->next_sibling, nama);
+}
+
+// Menambah kategori baru di bawah kategori induk
+bool tambah_kategori(string nama_induk, string nama_baru) {
+    if (root_kat == NULL) {
+        cout << "Tree kategori belum diinisialisasi!\n";
+        return false;
+    }
+    
+    KategoriNode* parent = cari_kategori(root_kat, nama_induk);
+    if (parent == NULL) {
+        cout << "Kategori induk '" << nama_induk << "' tidak ditemukan!\n";
+        return false;
+    }
+    
+    // Cek apakah nama sudah ada di level yang sama
+    KategoriNode* existing = parent->first_child;
+    while (existing != NULL) {
+        if (existing->nama == nama_baru) {
+            cout << "Kategori '" << nama_baru << "' sudah ada di bawah '" << nama_induk << "'!\n";
+            return false;
+        }
+        existing = existing->next_sibling;
+    }
+    
+    KategoriNode* baru = new KategoriNode(nama_baru, parent->level + 1);
+    baru->parent = parent;
+    
+    // Tambahkan sebagai anak terakhir
+    if (parent->first_child == NULL) {
+        parent->first_child = baru;
+    } else {
+        KategoriNode* sibling = parent->first_child;
+        while (sibling->next_sibling != NULL) {
+            sibling = sibling->next_sibling;
+        }
+        sibling->next_sibling = baru;
+    }
+    
+    cout << "Kategori '" << nama_baru << "' berhasil ditambahkan di bawah '" << nama_induk << "'\n";
+    return true;
+}
 
 int main() {
-
+	init_kat();
     while (true) {
 
         string roleUser = login();
@@ -1297,213 +1493,215 @@ int main() {
 
             int pilihanGudang;
 
-    while (true) {
-
-        string roleUser = login();
-
-        // pilihan keluar dari login
-        if (roleUser == "Keluar") {
-            cout << "\nProgram selesai.\n";
-            break;
-        }
-        
-        // ================= ADMIN GUDANG =================
-        if (roleUser == "Admin Gudang") {
-
-            int pilihanGudang;
-
-            while (true) {
-
-                bersihkan_layar();
-
-                cout << "\n=========================================\n";
-                cout << "            MENU ADMIN GUDANG\n";
-                cout << "=========================================\n";
-
-                cout << "1. Input Barang" << endl;
-                cout << "2. Tampilkan Barang" << endl;
-                cout << "3. Hapus Barang" << endl;
-                cout << "4. Update Barang" << endl;
-                cout << "5. Cari Barang" << endl;
-                cout << "6. Log Aktivitas" << endl;
-                cout << "0. Logout" << endl;
-
-                cout << "-----------------------------------------\n";
-                cout << "Pilih menu : ";
-
-                cin >> pilihanGudang;
-                cin.ignore();
-
-                switch (pilihanGudang) {
-
-                    case 1:
-                        tambah_barang();
-                        break;
-
-                    case 2:
-                        tampilkan_barang();
-                        break;
-
-                    case 3:
-                        hapus_barang();
-                        break;
-
-                    case 4:
-                        update_barang();
-                        break;
-
-                    case 5:
-                        cari_barang();
-                        break;
-
-                    case 6:
-                        tampilkan_log_barang();
-                        break;
-
-                    case 0:
-                        break;
-
-                    default:
-                        cout << "\nMenu tidak valid!\n";
-                }
-
-                if (pilihanGudang == 0) {
-                    break;
-                }
-
-                cout << "\nTekan ENTER untuk kembali...";
-                cin.get();
-            }
-        }
-
-        // ================= ADMIN KASIR =================
-        else if (roleUser == "Kasir") {
-
-            int pilihanKasir;
-
-            while (true) {
-
-                bersihkan_layar();
-
-                cout << "\n=========================================\n";
-                cout << "            MENU KASIR\n";
-                cout << "=========================================\n";
-
-                cout << "1. Transaksi Kasir" << endl;
-                cout << "2. Tampilkan Barang" << endl;
-                cout << "3. Riwayat Transaksi" << endl;
-                cout << "4. Log Aktivitas" << endl;
-                cout << "0. Logout" << endl;
-
-                cout << "-----------------------------------------\n";
-                cout << "Pilih menu : ";
-
-                cin >> pilihanKasir;
-                cin.ignore();
-
-                switch (pilihanKasir) {
-
-                    case 1:
-                        transaksi_kasir();
-                        break;
-
-                    case 2:
-                        tampilkan_barang();
-                        break;
-
-                    case 3:
-                        tampilkan_riwayat_transaksi();
-                        break;
-
-                    case 4:
-                        tampilkan_log_barang();
-                        break;
-
-                    case 0:
-                        break;
-
-                    default:
-                        cout << "\nMenu tidak valid!\n";
-                }
-
-                if (pilihanKasir == 0) {
-                    break;
-                }
-
-                cout << "\nTekan ENTER untuk kembali...";
-                cin.get();
-            }
-        }
-
-        // ================= CUSTOMER =================
-        else if (roleUser == "Customer") {
-
-            int pilihanCustomer;
-
-            while (true) {
-
-                bersihkan_layar();
-
-                cout << "\n=========================================\n";
-                cout << "              MENU CUSTOMER\n";
-                cout << "=========================================\n";
-
-                cout << "1. Lihat Barang" << endl;
-                cout << "2. Cari Barang" << endl;
-                cout << "3. Tambah Keranjang" << endl;
-                cout << "4. Tampilkan Keranjang" << endl;
-                cout << "5. Hapus Keranjang" << endl;
-                cout << "6. Riwayat Pembelian" << endl;
-
-                cout << "0. Logout" << endl;
-
-                cout << "-----------------------------------------\n";
-                cout << "Pilih menu : ";
-
-                cin >> pilihanCustomer;
-                cin.ignore();
-
-                switch (pilihanCustomer) {
-
-                    case 1:
-                        tampilkan_barang();
-                        break;
-
-                    case 2:
-                        cari_barang_customer();
-                        break;
-                    case 3:
-                        tambah_ke_keranjang();
-                        break;
-
-                    case 4:
-                        tampilkan_keranjang();
-                        break;
-
-                    case 5:
-                        hapus_keranjang();
-                        break;
-
-                    case 6:
-                        tampilkan_riwayat_customer("customer");
-                         break;
-
-                    case 0:
-                        break;
-
-                    default:
-                        cout << "\nMenu tidak valid!\n";
-                }
-
-                if (pilihanCustomer == 0) {
-                    break;
-                }
-
-                cout << "\nTekan ENTER untuk kembali...";
-                cin.get();
-            }
-        }
-    }
+		    while (true) {
+		
+		        string roleUser = login();
+		
+		        // pilihan keluar dari login
+		        if (roleUser == "Keluar") {
+		            cout << "\nProgram selesai.\n";
+		            break;
+		        }
+		        
+		        // ================= ADMIN GUDANG =================
+		        if (roleUser == "Admin Gudang") {
+		
+		            int pilihanGudang;
+		
+		            while (true) {
+		
+		                bersihkan_layar();
+		
+		                cout << "\n=========================================\n";
+		                cout << "            MENU ADMIN GUDANG\n";
+		                cout << "=========================================\n";
+		
+		                cout << "1. Input Barang" << endl;
+		                cout << "2. Tampilkan Barang" << endl;
+		                cout << "3. Hapus Barang" << endl;
+		                cout << "4. Update Barang" << endl;
+		                cout << "5. Cari Barang" << endl;
+		                cout << "6. Log Aktivitas" << endl;
+		                cout << "0. Logout" << endl;
+		
+		                cout << "-----------------------------------------\n";
+		                cout << "Pilih menu : ";
+		
+		                cin >> pilihanGudang;
+		                cin.ignore();
+		
+		                switch (pilihanGudang) {
+		
+		                    case 1:
+		                        tambah_barang();
+		                        break;
+		
+		                    case 2:
+		                        tampilkan_barang();
+		                        break;
+		
+		                    case 3:
+		                        hapus_barang();
+		                        break;
+		
+		                    case 4:
+		                        update_barang();
+		                        break;
+		
+		                    case 5:
+		                        cari_barang();
+		                        break;
+		
+		                    case 6:
+		                        tampilkan_log_barang();
+		                        break;
+		
+		                    case 0:
+		                        break;
+		
+		                    default:
+		                        cout << "\nMenu tidak valid!\n";
+		                }
+		
+		                if (pilihanGudang == 0) {
+		                    break;
+		                }
+		
+		                cout << "\nTekan ENTER untuk kembali...";
+		                cin.get();
+		            }
+		        }
+		
+		        // ================= ADMIN KASIR =================
+		        else if (roleUser == "Kasir") {
+		
+		            int pilihanKasir;
+		
+		            while (true) {
+		
+		                bersihkan_layar();
+		
+		                cout << "\n=========================================\n";
+		                cout << "            MENU KASIR\n";
+		                cout << "=========================================\n";
+		
+		                cout << "1. Transaksi Kasir" << endl;
+		                cout << "2. Tampilkan Barang" << endl;
+		                cout << "3. Riwayat Transaksi" << endl;
+		                cout << "4. Log Aktivitas" << endl;
+		                cout << "0. Logout" << endl;
+		
+		                cout << "-----------------------------------------\n";
+		                cout << "Pilih menu : ";
+		
+		                cin >> pilihanKasir;
+		                cin.ignore();
+		
+		                switch (pilihanKasir) {
+		
+		                    case 1:
+		                        transaksi_kasir();
+		                        break;
+		
+		                    case 2:
+		                        tampilkan_barang();
+		                        break;
+		
+		                    case 3:
+		                        tampilkan_riwayat_transaksi();
+		                        break;
+		
+		                    case 4:
+		                        tampilkan_log_barang();
+		                        break;
+		
+		                    case 0:
+		                        break;
+		
+		                    default:
+		                        cout << "\nMenu tidak valid!\n";
+		                }
+		
+		                if (pilihanKasir == 0) {
+		                    break;
+		                }
+		
+		                cout << "\nTekan ENTER untuk kembali...";
+		                cin.get();
+		            }
+		        }
+		
+		        // ================= CUSTOMER =================
+		        else if (roleUser == "Customer") {
+		
+		            int pilihanCustomer;
+		
+		            while (true) {
+		
+		                bersihkan_layar();
+		
+		                cout << "\n=========================================\n";
+		                cout << "              MENU CUSTOMER\n";
+		                cout << "=========================================\n";
+		
+		                cout << "1. Lihat Barang" << endl;
+		                cout << "2. Cari Barang" << endl;
+		                cout << "3. Tambah Keranjang" << endl;
+		                cout << "4. Tampilkan Keranjang" << endl;
+		                cout << "5. Hapus Keranjang" << endl;
+		                cout << "6. Riwayat Pembelian" << endl;
+		
+		                cout << "0. Logout" << endl;
+		
+		                cout << "-----------------------------------------\n";
+		                cout << "Pilih menu : ";
+		
+		                cin >> pilihanCustomer;
+		                cin.ignore();
+		
+		                switch (pilihanCustomer) {
+		
+		                    case 1:
+		                        tampilkan_barang();
+		                        break;
+		
+		                    case 2:
+		                        cari_barang_customer();
+		                        break;
+		                    case 3:
+		                        tambah_ke_keranjang();
+		                        break;
+		
+		                    case 4:
+		                        tampilkan_keranjang();
+		                        break;
+		
+		                    case 5:
+		                        hapus_keranjang();
+		                        break;
+		
+		                    case 6:
+		                        tampilkan_riwayat_customer("customer");
+		                         break;
+		
+		                    case 0:
+		                        break;
+		
+		                    default:
+		                        cout << "\nMenu tidak valid!\n";
+		                }
+		
+		                if (pilihanCustomer == 0) {
+		                    break;
+		                }
+		
+		                cout << "\nTekan ENTER untuk kembali...";
+		                cin.get();
+		            }
+		        }
+		    }
 
     return 0;
+}
+}
 }
