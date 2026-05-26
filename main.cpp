@@ -20,6 +20,11 @@ void bersihkan_layar() {
     #endif
 }
 
+
+// =========================
+// Ini adalah admin Gudang
+// ========================
+
 struct Barang {
     string kode_barang;
     string nama;
@@ -386,11 +391,12 @@ void hapus_barang() {
     NodeBarang* current = head;
     NodeBarang* prev = NULL;
 
-    while (current != NULL &&
-               toLowerCase(current->data.kode_barang) != toLowerCase(kode)) {
-            current = current->next;
-    }
+   while (current != NULL &&
+       toLowerCase(current->data.kode_barang) != toLowerCase(kode)) {
 
+    prev = current;
+    current = current->next;
+}
     if (current == NULL) {
         cout << "Barang dengan kode " << kode << " tidak ditemukan.\n";
         return;
@@ -449,16 +455,23 @@ void cari_barang() {
 
     NodeBarang* current = head;
 
-    if (opsi == 1) {
-        string kode;
-        cout << "\nMasukkan kode barang yang ingin dicari: ";
-        cin >> kode;
+   if (opsi == 1) {
 
-        while (current != NULL &&
-               toLowerCase(current->data.kode_barang) != toLowerCase(kode)) {
-            current = current->next;
+    string kode;
+
+    cout << "\nMasukkan kode barang yang ingin dicari: ";
+    getline(cin, kode);
+
+    while (current != NULL) {
+
+        if (toLowerCase(current->data.kode_barang)
+            == toLowerCase(kode)) {
+            break;
         }
+
+        current = current->next;
     }
+}
     else if (opsi == 2) {
         string cari;
         cout << "\nMasukkan nama barang yang ingin dicari: ";
@@ -616,7 +629,9 @@ void update_barang(){
         tambah_log("Update Barang", "Update pada kode: " + kode);
     }
 }
- 
+// ===============================
+// ini adalah login dan register
+// ===============================
 struct User {
     string username;
     string password;
@@ -683,6 +698,10 @@ string login() {
         cin.get();
     }
 }
+
+// ==============================
+// ini adalah fungsi admin kasir
+// ==============================
 
 //  Kasir men input data untuk costumer yang melakukan transaksi secara OFFLINE
 // queue dan STackk
@@ -842,7 +861,182 @@ void transaksi_kasir() {
     // keluar queue
     dequeueCustomer();
 }
+// =========================================
+// ini adalah fungsi customer (online)
+// =========================================
 
+// 1. tambahin barang ke keranjang (customer online)
+// Pake single linked list
+struct Keranjang {
+    string nama_barang;
+    int jumlah;
+    double harga;
+    Keranjang* next;
+};
+
+Keranjang* headKeranjang = NULL;
+Keranjang* tailKeranjang = NULL;
+void tambah_ke_keranjang() {
+
+    bersihkan_layar();
+
+    if (is_kosong()) {
+        cout << "Barang masih kosong.\n";
+        return;
+    }
+
+    tampilkan_barang();
+
+    string nama;
+    int jumlah;
+
+    cout << "\nMasukkan Nama barang: ";
+    getline(cin, nama);
+
+    NodeBarang* current = head;
+
+    while (current != NULL) {
+
+        if (toLowerCase(current->data.nama)
+            == toLowerCase(nama)){
+            break;
+        }
+
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        cout << "\nBarang tidak ditemukan!\n";
+        return;
+    }
+
+    cout << "Jumlah beli: ";
+    cin >> jumlah;
+    cin.ignore();
+
+    if (jumlah <= 0) {
+        cout << "\nJumlah tidak valid!\n";
+        return;
+    }
+
+    if (jumlah > current->data.stok) {
+        cout << "\nStok tidak cukup!\n";
+        return;
+    }
+
+  
+    Keranjang* baru = new Keranjang();
+
+    baru->nama_barang = current->data.nama;
+    baru->jumlah = jumlah;
+    baru->harga = current->data.harga_jual;
+    baru->next = NULL;
+
+    if (headKeranjang == NULL) {
+        headKeranjang = tailKeranjang = baru;
+    }
+    else {
+        tailKeranjang->next = baru;
+        tailKeranjang = baru;
+    }
+
+    cout << "\nBarang berhasil ditambahkan ke keranjang!\n";
+}
+void tampilkan_keranjang() {
+
+    bersihkan_layar();
+
+    if (headKeranjang == NULL) {
+        cout << "Keranjang masih kosong.\n";
+        return;
+    }
+
+    Keranjang* current = headKeranjang;
+
+    int no = 1;
+    double grandTotal = 0;
+
+    cout << "\n========== KERANJANG ==========\n";
+
+    while (current != NULL) {
+
+        double subtotal = current->jumlah * current->harga;
+
+        cout << no++ << ". "
+             << current->nama_barang
+             << " | Jumlah: " << current->jumlah
+             << " | Harga: Rp" << current->harga
+             << " | Subtotal: Rp" << subtotal
+             << endl;
+
+        grandTotal += subtotal;
+
+        current = current->next;
+    }
+
+    cout << "================================\n";
+    cout << "Total Belanja : Rp" << grandTotal << endl;
+}
+// 2. cari barang berdasarkan nama untuk customer
+void cari_barang_customer() {
+
+    bersihkan_layar();
+
+    if (is_kosong()) {
+        cout << "Barang masih kosong.\n";
+        return;
+    }
+
+    string keyword;
+
+    cout << "\n=========== CARI BARANG ===========\n";
+    cout << "Masukkan nama barang : ";
+    getline(cin, keyword);
+
+    NodeBarang* current = head;
+
+    bool ditemukan = false;
+    int no = 1;
+
+    cout << "\n=========== HASIL PENCARIAN ===========\n";
+
+    while (current != NULL) {
+
+        if (toLowerCase(current->data.nama)
+            .find(toLowerCase(keyword)) != string::npos) {
+
+            cout << "\nBarang ke-" << no++ << endl;
+
+            cout << "Kode Barang : "
+                 << current->data.kode_barang << endl;
+
+            cout << "Nama        : "
+                 << current->data.nama << endl;
+
+            cout << "Kategori    : "
+                 << current->data.kategori << endl;
+
+            cout << "Harga       : Rp"
+                 << current->data.harga_jual << endl;
+
+            cout << "Stok        : "
+                 << current->data.stok << endl;
+
+            cout << "Supplier    : "
+                 << current->data.supplier << endl;
+
+            cout << "----------------------------------\n";
+
+            ditemukan = true;
+        }
+
+        current = current->next;
+    }
+
+    if (!ditemukan) {
+        cout << "\nBarang tidak ditemukan.\n";
+    }
+}
 int main() {
 
     while (true) {
@@ -934,7 +1128,7 @@ int main() {
                 bersihkan_layar();
 
                 cout << "\n=========================================\n";
-                cout << "            MENU ADMIN KASIR\n";
+                cout << "            MENU KASIR\n";
                 cout << "=========================================\n";
 
                 cout << "1. Transaksi Kasir" << endl;
@@ -998,6 +1192,9 @@ int main() {
 
                 cout << "1. Lihat Barang" << endl;
                 cout << "2. Cari Barang" << endl;
+                cout << "3. Tambah Keranjang" << endl;
+                cout << "4. Tampilkan Keranjang" << endl;
+
                 cout << "0. Logout" << endl;
 
                 cout << "-----------------------------------------\n";
@@ -1013,7 +1210,14 @@ int main() {
                         break;
 
                     case 2:
-                        cari_barang();
+                        cari_barang_customer();
+                        break;
+                    case 3:
+                        tambah_ke_keranjang();
+                        break;
+
+                    case 4:
+                        tampilkan_keranjang();
                         break;
 
                     case 0:
