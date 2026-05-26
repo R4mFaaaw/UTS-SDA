@@ -3,14 +3,21 @@
 *.exe
 *.out
 *.app
+main
 
-# Intermediate Objects
-*.o
-*.obj
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
 
-# Visual Studio Code
 .vscode/
-.history/
+
+.vs/
+*.user
+*.userosscache
+*.sln
+*.vcxproj
+
+
 *.log
 
 # IDE - Dev-C++ 
