@@ -351,7 +351,7 @@ void tambah_barang() {
         }
         
         // Pilih kategori dari tree
-        pilih_kategori_dari_tree(br.kategori);
+//        pilih_kategori_dari_tree(br.kategori);
         
         string input;
         while (true) {
@@ -477,16 +477,52 @@ void tambah_barang() {
     }
 }
 
-void tampilkan_barang() {
-    bersihkan_layar();
+void tampilkan_barang_dengan_filter() {
     if (is_kosong()) {
         cout << "List Barang kosong." << endl;
         return;
     }
-
-    cout << "\n=== DAFTAR BARANG ===" << endl;
+    
+    int filter_by;
+    string filter_value;
+    NodeBarang* current = head;
+    int no = 1;
+    bool found = false;
+    
+    cout << "\n=== FILTER BARANG ===\n";
+    cout << "1. Tampilkan semua barang\n";
+    cout << "2. Filter berdasarkan Kategori\n";
+    cout << "3. Filter berdasarkan Nama Barang\n";
+    cout << "4. Filter berdasarkan Stok (<= nilai tertentu)\n";
+    cout << "5. Filter berdasarkan Stok (>= nilai tertentu)\n";
+    cout << "6. Filter berdasarkan Harga Jual (<= nilai tertentu)\n";
+    cout << "7. Filter berdasarkan Harga Jual (>= nilai tertentu)\n";
+    cout << "8. Filter berdasarkan Supplier\n";
+    cout << "9. Tampilkan barang yang akan kadaluarsa (<= 30 hari)\n";
+    cout << "Pilih filter: ";
+    cin >> filter_by;
+    cin.ignore();
+    
+    // Handle filter 9 (kadaluarsa) tanpa input nilai tambahan
+    if (filter_by == 9) {
+        // Tidak perlu input nilai, langsung proses
+    }
+    // Handle filter lainnya yang perlu input nilai
+    else if (filter_by != 1) {
+        if (filter_by == 2) cout << "Masukkan nama kategori: ";
+        else if (filter_by == 3) cout << "Masukkan nama barang: ";
+        else if (filter_by == 4 || filter_by == 5) cout << "Masukkan nilai stok: ";
+        else if (filter_by == 6 || filter_by == 7) cout << "Masukkan nilai harga: ";
+        else if (filter_by == 8) cout << "Masukkan nama supplier: ";
+        
+        getline(cin, filter_value);
+    }
+    
+    // Konversi ke lowercase untuk filter
+    string filter_lower = toLowerCase(filter_value);
+    
+    cout << "\n=== HASIL FILTER BARANG ===\n";
     cout << string(148, '=') << endl;
-
     cout << left << setw(5)  << "No"
          << setw(12) << "Kode"
          << setw(20) << "Nama"
@@ -497,27 +533,174 @@ void tampilkan_barang() {
          << setw(10) << "Satuan"
          << setw(15) << "Expired"
          << "Supplier" << endl;
-
     cout << string(148, '-') << endl;
-
-    NodeBarang* current = head;
-    int no = 1;
-
+    
+    current = head;
+    no = 1;
+    
+    // Dapatkan tanggal sekarang untuk filter kadaluarsa
+    time_t t = time(0);
+    tm* now = localtime(&t);
+    int curr_d = now->tm_mday;
+    int curr_m = now->tm_mon + 1;
+    int curr_y = now->tm_year + 1900;
+    
     while (current != NULL) {
-        cout << left << setw(5)  << no++
-             << setw(12) << current->data.kode_barang
-             << setw(20) << current->data.nama
-             << setw(15) << current->data.kategori
-             << setw(12) << fixed << setprecision(0) << current->data.harga_beli
-             << setw(12) << current->data.harga_jual
-             << setw(8)  << current->data.stok
-             << setw(10) << current->data.satuan
-             << setw(15) << current->data.tanggal_kadaluarsa
-             << current->data.supplier << endl;
-        current = current->next; 
+        bool tampil = false;
+        
+        switch(filter_by) {
+            case 1: // Tampilkan semua
+                tampil = true;
+                break;
+                
+            case 2: // Filter kategori
+                if (toLowerCase(current->data.kategori) == filter_lower) {
+                    tampil = true;
+                }
+                break;
+                
+            case 3: // Filter nama (contains)
+                if (toLowerCase(current->data.nama).find(filter_lower) != string::npos) {
+                    tampil = true;
+                }
+                break;
+                
+            case 4: // Filter stok <=
+                if (current->data.stok <= atoi(filter_value.c_str())) {
+                    tampil = true;
+                }
+                break;
+                
+            case 5: // Filter stok >=
+                if (current->data.stok >= atoi(filter_value.c_str())) {
+                    tampil = true;
+                }
+                break;
+                
+            case 6: // Filter harga jual <=
+                if (current->data.harga_jual <= atof(filter_value.c_str())) {
+                    tampil = true;
+                }
+                break;
+                
+            case 7: // Filter harga jual >=
+                if (current->data.harga_jual >= atof(filter_value.c_str())) {
+                    tampil = true;
+                }
+                break;
+                
+            case 8: // Filter supplier
+                if (toLowerCase(current->data.supplier) == filter_lower) {
+                    tampil = true;
+                }
+                break;
+                
+            case 9: { // Filter kadaluarsa <= 30 hari
+                if (current->data.tanggal_kadaluarsa != "-") {
+                    int d = atoi(current->data.tanggal_kadaluarsa.substr(0,2).c_str());
+                    int m = atoi(current->data.tanggal_kadaluarsa.substr(3,2).c_str());
+                    int y = atoi(current->data.tanggal_kadaluarsa.substr(6,4).c_str());
+                    
+                    // Hitung selisih hari
+                    tm expire_tm = {0};
+                    expire_tm.tm_mday = d;
+                    expire_tm.tm_mon = m - 1;
+                    expire_tm.tm_year = y - 1900;
+                    
+                    time_t expire_time = mktime(&expire_tm);
+                    double diff_seconds = difftime(expire_time, t);
+                    int diff_days = diff_seconds / (60 * 60 * 24);
+                    
+                    if (diff_days >= 0 && diff_days <= 30) {
+                        tampil = true;
+                    }
+                }
+                break;
+            }
+            
+            default:
+                tampil = true;
+                break;
+        }
+        
+        if (tampil) {
+            cout << left << setw(5)  << no++
+                 << setw(12) << current->data.kode_barang
+                 << setw(20) << current->data.nama
+                 << setw(15) << current->data.kategori
+                 << setw(12) << fixed << setprecision(0) << current->data.harga_beli
+                 << setw(12) << current->data.harga_jual
+                 << setw(8)  << current->data.stok
+                 << setw(10) << current->data.satuan
+                 << setw(15) << current->data.tanggal_kadaluarsa
+                 << current->data.supplier << endl;
+            found = true;
+        }
+        
+        current = current->next;
+    }
+    
+    if (!found) {
+        cout << left << setw(148) << "Tidak ada barang yang sesuai dengan filter!" << endl;
     }
     
     cout << string(148, '=') << endl;
+}
+
+void tampilkan_barang() {
+    bersihkan_layar();
+    if (is_kosong()) {
+        cout << "List Barang kosong." << endl;
+        return;
+    }
+    
+    int pilih;
+    cout << "\n=== MENU TAMPILAN BARANG ===\n";
+    cout << "1. Tampilkan semua barang\n";
+    cout << "2. Tampilkan dengan filter\n";
+    cout << "Pilih: ";
+    cin >> pilih;
+    
+    if (pilih == 1) {
+        // Tampilkan semua barang (tanpa filter)
+        cout << "\n=== DAFTAR BARANG ===" << endl;
+        cout << string(148, '=') << endl;
+        cout << left << setw(5)  << "No"
+             << setw(12) << "Kode"
+             << setw(20) << "Nama"
+             << setw(15) << "Kategori"
+             << setw(12) << "Hrg Beli"
+             << setw(12) << "Hrg Jual"
+             << setw(8)  << "Stok"
+             << setw(10) << "Satuan"
+             << setw(15) << "Expired"
+             << "Supplier" << endl;
+        cout << string(148, '-') << endl;
+
+        NodeBarang* current = head;
+        int no = 1;
+
+        while (current != NULL) {
+            cout << left << setw(5)  << no++
+                 << setw(12) << current->data.kode_barang
+                 << setw(20) << current->data.nama
+                 << setw(15) << current->data.kategori
+                 << setw(12) << fixed << setprecision(0) << current->data.harga_beli
+                 << setw(12) << current->data.harga_jual
+                 << setw(8)  << current->data.stok
+                 << setw(10) << current->data.satuan
+                 << setw(15) << current->data.tanggal_kadaluarsa
+                 << current->data.supplier << endl;
+            current = current->next; 
+        }
+        cout << string(148, '=') << endl;
+    } 
+    else if (pilih == 2) {
+        tampilkan_barang_dengan_filter();
+    }
+    else {
+        cout << "Pilihan tidak valid!" << endl;
+    }
 }
 
 // Fitur Mengahapus barang 
@@ -1522,6 +1705,7 @@ int main() {
 		                cout << "4. Update Barang" << endl;
 		                cout << "5. Cari Barang" << endl;
 		                cout << "6. Log Aktivitas" << endl;
+		                cout << "7. Manajemen Kategori Barang" << endl;
 		                cout << "0. Logout" << endl;
 		
 		                cout << "-----------------------------------------\n";
@@ -1555,7 +1739,7 @@ int main() {
 		                    case 6:
 		                        tampilkan_log_barang();
 		                        break;
-		
+		    
 		                    case 0:
 		                        break;
 		
