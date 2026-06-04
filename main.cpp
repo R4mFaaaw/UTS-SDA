@@ -1284,7 +1284,7 @@ void register_user() {
 
     cout << "\nRegister berhasil!\n";
 }
-}
+
 // ==============================
 // ini adalah fungsi admin kasir
 // ==============================
