@@ -1016,25 +1016,95 @@ string login() {
             cout << "\nUsername : ";
             getline(cin, username);
 
-            cout << "Password : ";
-            getline(cin, password);
+            int indexUser = -1;
 
+            // cek username ada atau tidak
             for (int i = 0; i < jumlahUser; i++) {
 
-                if (username == users[i].username &&
-                    password == users[i].password) {
-
-                    cout << "\nLogin berhasil sebagai "
-                         << users[i].role << "!\n";
-
-                    return users[i].role;
+                if (username == users[i].username) {
+                    indexUser = i;
+                    break;
                 }
             }
 
-            cout << "\nUsername atau password salah!\n";
+            // username tidak ditemukan
+            if (indexUser == -1) {
 
-            cout << "Tekan ENTER untuk coba lagi...";
-            cin.get();
+                cout << "\nUsername tidak ditemukan!\n";
+                cout << "Silakan register terlebih dahulu.\n";
+
+                cout << "\nTekan ENTER untuk kembali...";
+                cin.get();
+
+                continue;
+            }
+
+            int kesempatan = 3;
+
+            while (kesempatan > 0) {
+
+                cout << "Password : ";
+                getline(cin, password);
+
+                // password benar
+                if (password == users[indexUser].password) {
+
+                    cout << "\nLogin berhasil sebagai "
+                         << users[indexUser].role << "!\n";
+
+                    return users[indexUser].role;
+                }
+
+                kesempatan--;
+
+                cout << "\nPassword salah!\n";
+
+                if (kesempatan > 0) {
+
+                    int opsi;
+
+                    cout << "\n1. Coba Lagi\n";
+                    cout << "2. Lupa Password\n";
+                    cout << "Pilih : ";
+                    cin >> opsi;
+                    cin.ignore();
+
+                    if (opsi == 2) {
+
+                        string passwordBaru;
+
+                        cout << "\nMasukkan password baru : ";
+                        getline(cin, passwordBaru);
+
+                        while (passwordBaru.empty()) {
+                            cout << "Password tidak boleh kosong : ";
+                            getline(cin, passwordBaru);
+                        }
+
+                        users[indexUser].password = passwordBaru;
+
+                        cout << "\nPassword berhasil diganti!\n";
+                        cout << "Silakan login kembali.\n";
+
+                        cout << "\nTekan ENTER...";
+                        cin.get();
+
+                        break; // kembali ke menu utama login
+                    }
+
+                    cout << "\nSisa kesempatan : "
+                         << kesempatan << endl;
+                }
+            }
+
+            if (kesempatan == 0) {
+
+                cout << "\nKesempatan login habis!\n";
+                cout << "Kembali ke menu utama...\n";
+
+                cout << "\nTekan ENTER...";
+                cin.get();
+            }
         }
 
         else {
@@ -1044,55 +1114,167 @@ string login() {
     }
 }
 
+void lupa_password() {
+    string username;
+
+    cout << "\n=== LUPA PASSWORD ===\n";
+    cout << "Masukkan username : ";
+    getline(cin, username);
+
+    bool ditemukan = false;
+
+    for (int i = 0; i < jumlahUser; i++) {
+
+        if (users[i].username == username) {
+
+            ditemukan = true;
+
+            string passwordBaru;
+
+            cout << "Masukkan password baru : ";
+            getline(cin, passwordBaru);
+
+            while (passwordBaru.empty()) {
+                cout << "Password tidak boleh kosong : ";
+                getline(cin, passwordBaru);
+            }
+
+            users[i].password = passwordBaru;
+
+            cout << "\nPassword berhasil diganti!\n";
+            break;
+        }
+    }
+
+    if (!ditemukan) {
+        cout << "\nUsername tidak ditemukan!\n";
+    }
+
+    cout << "\nTekan ENTER untuk kembali...";
+    cin.get();
+}
+
+bool hanyaHuruf(string teks) {
+    for (int i = 0; i < teks.length(); i++) {
+        if (!isalpha(teks[i]) && teks[i] != ' ') {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool usernameSudahAda(string username) {
+    for (int i = 0; i < jumlahUser; i++) {
+        if (users[i].username == username) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void register_user() {
 
     bersihkan_layar();
 
-    string username, password;
+    string nama;
+    string username;
+    string password;
     int role;
 
     cout << "=====================================\n";
     cout << "             REGISTER\n";
     cout << "=====================================\n";
 
-    cout << "Username : ";
-    getline(cin, username);
+    // VALIDASI NAMA
+    while (true) {
 
-    // cek username sudah ada atau belum
-    for (int i = 0; i < jumlahUser; i++) {
+        cout << "Nama : ";
+        getline(cin, nama);
 
-        if (users[i].username == username) {
-            cout << "\nUsername sudah digunakan!\n";
-            return;
+        bool valid = true;
+
+        if (nama.empty()) {
+
+            cout << "\nNama tidak boleh kosong!\n";
+            continue;
+        }
+
+        for (int i = 0; i < nama.length(); i++) {
+
+            if (!isalpha(nama[i]) && nama[i] != ' ') {
+
+                valid = false;
+                break;
+            }
+        }
+
+        if (!valid) {
+
+            cout << "\nNama hanya boleh berisi huruf!\n";
+        }
+        else {
+
+            break;
         }
     }
 
-    cout << "Password : ";
-    getline(cin, password);
+    // VALIDASI USERNAME
+    while (true) {
 
-    cout << "\nPilih Role\n";
-    cout << "1. Admin Gudang\n";
-    cout << "2. Kasir\n";
-    cout << "3. Customer\n";
-    cout << "Pilih : ";
-    cin >> role;
-    cin.ignore();
+        cout << "Username : ";
+        getline(cin, username);
+
+        if (username.empty()) {
+            cout << "Username tidak boleh kosong!\n";
+        }
+        else if (usernameSudahAda(username)) {
+            cout << "Username sudah digunakan! Masukkan username lain.\n";
+        }
+        else {
+            break;
+        }
+    }
+
+    // VALIDASI PASSWORD
+    while (true) {
+
+        cout << "Password : ";
+        getline(cin, password);
+
+        if (password.empty()) {
+            cout << "Password tidak boleh kosong!\n";
+        }
+        else {
+            break;
+        }
+    }
+
+    while (true) {
+
+        cout << "\nPilih Role\n";
+        cout << "1. Admin Gudang\n";
+        cout << "2. Kasir\n";
+        cout << "3. Customer\n";
+        cout << "Pilih : ";
+
+        cin >> role;
+        cin.ignore();
+
+        if (role >= 1 && role <= 3) {
+            break;
+        }
+
+        cout << "Role tidak valid!\n";
+    }
 
     string roleUser;
 
-    if (role == 1) {
+    if (role == 1)
         roleUser = "Admin Gudang";
-    }
-    else if (role == 2) {
+    else if (role == 2)
         roleUser = "Kasir";
-    }
-    else if (role == 3) {
+    else
         roleUser = "Customer";
-    }
-    else {
-        cout << "\nRole tidak valid!\n";
-        return;
-    }
 
     users[jumlahUser].username = username;
     users[jumlahUser].password = password;
@@ -1102,7 +1284,7 @@ void register_user() {
 
     cout << "\nRegister berhasil!\n";
 }
-
+}
 // ==============================
 // ini adalah fungsi admin kasir
 // ==============================
