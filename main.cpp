@@ -1408,36 +1408,47 @@ void tampilkan_riwayat_customer(string namaCustomer) {
     cout << "       RIWAYAT PEMBELIAN & STATUS        \n";
     cout << "=========================================\n";
 
-    // Validasi apakah stack transaksi kosong atau tidak
-    // Sesuaikan 'topStack' jika di kodemu namanya 'top' atau sejenisnya
     if (topTransaksi == NULL) {
         cout << "[!] Belum ada riwayat transaksi di toko ini.\n";
         return;
     }
 
-    // Menggunakan temporary pointer untuk menelusuri Stack tanpa merusak data asli
-    // Sesuaikan 'NodeTransaksi' atau 'Stack' dengan nama struct stack kelompokmu
+    // LENGKAH 1: Hitung dulu ada berapa banyak total struk milik customer ini di dalam Stack
+    int totalStrukUser = 0;
+    StackTransaksi* hitung = topTransaksi;
+    while (hitung != NULL) {
+        if (hitung->receipt.find(namaCustomer) != string::npos) {
+            totalStrukUser++;
+        }
+        hitung = hitung->next;
+    }
+
+    // LANGKAH 2: Cetak struknya. Nomor nota dimulai dari jumlah total (misal Nota Ke-2, baru Nota Ke-1)
     StackTransaksi* curr = topTransaksi;
     bool ditemukan = false;
-    int no = 1;
 
     while (curr != NULL) {
-        // DEBUG FIX: Mencari apakah nama customer ada di dalam teks 'receipt' utuh
-        // Fungsi .find() akan mengembalikan nilai npos jika teks tidak ditemukan
         if (curr->receipt.find(namaCustomer) != string::npos) {
             ditemukan = true;
-            cout << "Nota Ke-" << no++ << endl;
+            // Gunakan totalStrukUser sebagai nomor nota, lalu dikurangi 1 tiap kali loop (hitung mundur)
+            cout << "Nota Ke-" << totalStrukUser-- << endl; 
             cout << "-----------------------------------------\n";
-            cout << curr->receipt << endl; // Langsung cetak isi nota utuhnya di sini
-            cout << "Status        : LUNAS (Selesai di Kasir)\n";
+            cout << curr->receipt << endl;
+            
+            // Sedikit dekorasi: bedakan teks bawahnya sesuai metode pembayarannya
+            if (curr->receipt.find("ONLINE") != string::npos) {
+                cout << "Status        : LUNAS (Pembayaran Online)\n";
+            } else {
+                cout << "Status        : LUNAS (Selesai di Kasir)\n";
+            }
             cout << "=========================================\n\n";
         }
-        curr = curr->next; // Pindah ke tumpukan nota di bawahnya
+        curr = curr->next;
     }
 
     if (!ditemukan) {
         cout << "[!] Anda belum memiliki riwayat pembayaran.\n";
-        cout << "Silakan lakukan checkout dan selesaikan pembayaran di Kasir.\n";
+        cout << "Silakan lakukan checkout dan selesaikan pembayaran.\n";
     }
 }
 
@@ -1869,7 +1880,7 @@ void menu_kasir() {
 void checkout_keranjang() {
     bersihkan_layar();
 
-    if (head_keranjang == NULL) {
+    if (headKeranjang == NULL) {
         cout << "=========================================\n";
         cout << "            CHECKOUT PESANAN             \n";
         cout << "=========================================\n";
@@ -1883,7 +1894,7 @@ void checkout_keranjang() {
     cout << "Nama Customer : " << current_username << endl;
     cout << "-----------------------------------------\n";
 
-    Keranjang* current = head_keranjang;
+    Keranjang* current = headKeranjang;
     int no = 1;
     double grandTotal = 0;
 
@@ -1908,7 +1919,15 @@ void checkout_keranjang() {
     cin.ignore();
 
     if (konfirmasi == 'y' || konfirmasi == 'Y') {
-        // 1. Kurangi stok barang utama di Gudang/Toko
+        int metode;
+        cout << "\nPilih Metode Pembayaran:\n";
+        cout << "1. Offline (Bayar di Kasir Toko)\n";
+        cout << "2. Online (Bayar Langsung via Aplikasi)\n";
+        cout << "Pilihan Anda: ";
+        cin >> metode;
+        cin.ignore();
+
+        // ---- PROSES PENGURANGAN STOK GUDANG ----
         Keranjang* currKeranjang = headKeranjang;
         while (currKeranjang != NULL) {
             NodeBarang* currBarang = head;
@@ -1922,36 +1941,106 @@ void checkout_keranjang() {
             currKeranjang = currKeranjang->next;
         }
 
-        // =========================================================================
-        // JEMBATAN EMAS: Salin data dari Keranjang ke headRiwayat (Biar Kasir bisa baca)
-        // =========================================================================
-        currKeranjang = headKeranjang;
-        while (currKeranjang != NULL) {
-            RiwayatCustomer* baru = new RiwayatCustomer();
-            baru->nama_customer = current_username;
-            baru->barang = currKeranjang->nama_barang;
-            baru->jumlah = currKeranjang->jumlah;
-            baru->total = currKeranjang->jumlah * currKeranjang->harga;
-            baru->status = "Diproses"; // Kunci agar dibaca oleh kasir
-            baru->next = NULL;
+        if (metode == 2) {
+            // =========================================================================
+            // OPSI ONLINE: LANGSUNG BAYAR DI TEMPAT (MENU CUSTOMER)
+            // =========================================================================
+            cout << "\n-----------------------------------------\n";
+            cout << "            PEMBAYARAN ONLINE            \n";
+            cout << "-----------------------------------------\n";
+            cout << "Total Tagihan: Rp" << grandTotal << endl;
+            
+            double uangOnline = 0;
+            while (true) {
+                cout << "Masukkan Nominal Uang Pembayaran: Rp";
+                cin >> uangOnline;
+                cin.ignore();
 
-            // Masukkan ke Linked List headRiwayat kelompokmu
-            if (headRiwayat == NULL) {
-                headRiwayat = baru;
-            } else {
-                RiwayatCustomer* temp = headRiwayat;
-                while (temp->next != NULL) {
-                    temp = temp->next;
+                if (uangOnline >= grandTotal) {
+                    break;
+                } else {
+                    cout << "[!] Saldo/Uang Anda tidak cukup! Kurang Rp" << (grandTotal - uangOnline) << "\n\n";
                 }
-                temp->next = baru;
             }
-            currKeranjang = currKeranjang->next;
+
+            double kembalianOnline = uangOnline - grandTotal;
+            cout << "Kembalian E-Wallet Anda: Rp" << kembalianOnline << endl;
+
+            // Buat Struk Berhasil & Push ke Stack topTransaksi
+            string receipt =
+                "\n=========== MINIMARKET RECEIPT (ONLINE) ===========\n"
+                "Nama Customer : " + current_username + "\n"
+                "Total Belanja : Rp" + to_string((int)grandTotal) + "\n"
+                "Metode        : ONLINE (E-Wallet)\n"
+                "Uang Bayar    : Rp" + to_string((int)uangOnline) + "\n"
+                "Kembalian     : Rp" + to_string((int)kembalianOnline) + "\n"
+                "Status        : LUNAS\n"
+                "====================================================";
+
+            pushTransaksi(receipt);
+
+            // Simpan langsung ke headRiwayat dengan status "Selesai" (Lewati Antrean Kasir)
+            currKeranjang = headKeranjang;
+            while (currKeranjang != NULL) {
+                RiwayatCustomer* baru = new RiwayatCustomer();
+                baru->nama_customer = current_username;
+                baru->barang = currKeranjang->nama_barang;
+                baru->jumlah = currKeranjang->jumlah;
+                baru->total = currKeranjang->jumlah * currKeranjang->harga;
+                baru->status = "Selesai"; // Status langsung selesai
+                baru->next = NULL;
+
+                if (headRiwayat == NULL) {
+                    headRiwayat = baru;
+                } else {
+                    RiwayatCustomer* temp = headRiwayat;
+                    while (temp->next != NULL) {
+                        temp = temp->next;
+                    }
+                    temp->next = baru;
+                }
+                currKeranjang = currKeranjang->next;
+            }
+
+            tambah_log("Pembayaran Online", "Customer " + current_username + " bayar mandiri ONLINE sebesar Rp" + to_string((int)grandTotal));
+            cout << "\n[✓] Pembayaran Online Berhasil!\n";
+            cout << "Struk Anda telah diterbitkan. Silakan cek menu Riwayat Pembelian.\n";
+
+        } else {
+            // =========================================================================
+            // OPSI OFFLINE: MASUK ANTREAN KASIR (ALUR LAMA)
+            // =========================================================================
+            currKeranjang = headKeranjang;
+            while (currKeranjang != NULL) {
+                RiwayatCustomer* baru = new RiwayatCustomer();
+                baru->nama_customer = current_username;
+                baru->barang = currKeranjang->nama_barang;
+                baru->jumlah = currKeranjang->jumlah;
+                baru->total = currKeranjang->jumlah * currKeranjang->harga;
+                baru->status = "Diproses"; // Menunggu kasir
+                baru->next = NULL;
+
+                if (headRiwayat == NULL) {
+                    headRiwayat = baru;
+                } else {
+                    RiwayatCustomer* temp = headRiwayat;
+                    while (temp->next != NULL) {
+                        temp = temp->next;
+                    }
+                    temp->next = baru;
+                }
+                currKeranjang = currKeranjang->next;
+            }
+
+            // Masuk ke Antrean Queue Kasir
+            enqueueCustomer(current_username);
+
+            tambah_log("Checkout Offline", "Customer " + current_username + " menunggu kasir sebesar Rp" + to_string((int)grandTotal));
+            cout << "\n[✓] Checkout Sukses (Metode Offline)!\n";
+            cout << "Pesanan diteruskan ke antrean Kasir. Silakan lakukan pembayaran fisik.\n";
         }
 
-        // 2. Memasukkan customer ke Queue Antrean Kasir
-        enqueueCustomer(current_username);
-
-        // 3. Mengosongkan isi keranjang belanja setelah disalin
+        // ---- BERSIHKAN KERANJANG BELANJA ----
         currKeranjang = headKeranjang;
         while (currKeranjang != NULL) {
             Keranjang* hapus = currKeranjang;
@@ -1961,13 +2050,8 @@ void checkout_keranjang() {
         headKeranjang = NULL;
         tailKeranjang = NULL;
 
-        tambah_log("Checkout Customer", "Customer " + current_username + " berhasil checkout sebesar Rp" + to_string((int)grandTotal));
-
-        cout << "\n[✓] Checkout Berhasil!\n";
-        cout << "Pesanan Anda telah diteruskan ke Kasir.\n";
-        cout << "Silakan menuju ke Kasir untuk mengantre dan melakukan pembayaran.\n";
     } else {
-        cout << "\n[!] Checkout dibatalkan. Barang tetap berada di keranjang Anda.\n";
+        cout << "\n[!] Checkout dibatalkan.\n";
     }
 }
 
