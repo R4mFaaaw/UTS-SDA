@@ -1390,6 +1390,46 @@ void tampilkan_riwayat_transaksi() {
         current = current->next;
     }
 }
+
+void update_status_pesanan() {
+
+    if(headRiwayat == NULL){
+        cout << "Belum ada pesanan.\n";
+        return;
+    }
+
+    RiwayatCustomer* current = headRiwayat;
+    int no = 1;
+
+    cout << "\n=== DAFTAR PESANAN ===\n";
+
+    while(current != NULL){
+        cout << no << ". "
+             << current->barang
+             << " | Customer: " << current->nama_customer
+             << " | Status: " << current->status
+             << endl;
+
+        current = current->next;
+        no++;
+    }
+
+    int pilih;
+    cout << "\nPilih nomor pesanan: ";
+    cin >> pilih;
+
+    current = headRiwayat;
+
+    for(int i=1; i<pilih && current!=NULL; i++){
+        current = current->next;
+    }
+
+    if(current != NULL){
+        current->status = "Selesai";
+        cout << "\nStatus pesanan berhasil diubah menjadi Selesai!\n";
+    }
+}
+
 void transaksi_kasir() {
 
     bersihkan_layar();
@@ -1509,7 +1549,7 @@ void tambah_riwayat_customer(string nama, string barang, int jumlah, double tota
     baru->barang = barang;
     baru->jumlah = jumlah;
     baru->total = total;
-    baru->status = status;
+    baru->status = "Diproses";
     baru->next = NULL;
 
     if (headRiwayat == NULL) {
@@ -1998,6 +2038,7 @@ int main() {
                 cout << "2. Tampilkan Barang" << endl;
                 cout << "3. Riwayat Transaksi" << endl;
                 cout << "4. Log Aktivitas" << endl;
+                cout << "4. Update Status Pesanan" << endl;
                 cout << "0. Logout" << endl;
 
                 cout << "-----------------------------------------\n";
@@ -2022,6 +2063,10 @@ int main() {
 
                     case 4:
                         tampilkan_log_barang();
+                        break;
+
+                    case 5:
+                        update_status_pesanan();
                         break;
 
                     case 0:
