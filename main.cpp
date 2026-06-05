@@ -10,16 +10,39 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iomanip>
-#include <limits> 
+#include <limits>
 #include <cctype>
 #include <ctime>
 using namespace std;
 
+// ===============================
+// MENU CUSTOMER
+// ===============================
+
+struct QueueCustomer {
+    string nama_customer;
+    QueueCustomer* next;
+};
+
+struct StackTransaksi {
+    string receipt;
+    StackTransaksi* next;
+};
+
+struct User {
+    string username;
+    string password;
+    string role;
+    string nama_lengkap;
+    string alamat;
+    string no_telp;
+};
+
 // ============================================================
-// STRUKTUR DATA
+// DEKLARASI GLOBAL VARIABEL
 // ============================================================
 struct Barang {
-	int id;
+    int id;
     string kode_barang;
     string nama;
     string kategori;
@@ -32,8 +55,8 @@ struct Barang {
 } br;
 
 struct NodeBarang {
-	Barang data;
-	NodeBarang* next;
+    Barang data;
+    NodeBarang* next;
 };
 
 struct KategoriNode {
@@ -82,26 +105,6 @@ struct RiwayatCustomer {
     string status;
     RiwayatCustomer* next;
 };
-
-struct QueueCustomer {
-    string nama_customer;
-    QueueCustomer* next;
-};
-
-struct StackTransaksi {
-    string receipt;
-    StackTransaksi* next;
-};
-
-struct User {
-    string username;
-    string password;
-    string role;
-};
-
-// ============================================================
-// DEKLARASI GLOBAL VARIABEL
-// ============================================================
 NodeBarang* head = NULL;
 NodeBarang* tail = NULL;
 int next_id = 1;
@@ -124,7 +127,65 @@ StackTransaksi* topTransaksi = NULL;
 
 User users[100];
 int jumlahUser = 0;
+int user_count = 0; // alias counter pengguna (beberapa bagian kode menggunakan nama ini)
 string current_username = "";
+
+// Alias pointer/nama agar kode lama tetap berfungsi
+QueueCustomer* &head_queue = frontQueue;
+RiwayatCustomer* &head_riwayat = headRiwayat;
+Keranjang* &head_keranjang = headKeranjang;
+Keranjang* &tail_keranjang = tailKeranjang;
+RiwayatCustomer* &tail_riwayat = tailRiwayat;
+
+// Forward declarations for functions defined later in the file
+void enqueueCustomer(string nama);
+void dequeueCustomer();
+void tambah_log(string aksi, string detail);
+void _user();
+void bersihkan_layar();
+
+// Simple wrappers to adapt naming differences in the codebase
+void enqueue(string nama) { enqueueCustomer(nama); }
+void dequeue() { dequeueCustomer(); }
+
+// FUNGSI LOGIN SEDERHANA
+void register_customer();
+string login() {
+    while (true) {
+        bersihkan_layar();
+        cout << "=========================================" << endl;
+        cout << "              MENU LOGIN                " << endl;
+        cout << "=========================================" << endl;
+        cout << "1. Login" << endl;
+        cout << "2. Register (Customer)" << endl;
+        cout << "0. Keluar" << endl;
+        cout << "Pilih: ";
+
+        int opsi;
+        cin >> opsi;
+        cin.ignore();
+
+        if (opsi == 0) return string("Keluar");
+        else if (opsi == 2) { register_customer(); continue; }
+        else if (opsi == 1) {
+            string uname, pwd;
+            cout << "Username: ";
+            getline(cin, uname);
+            cout << "Password: ";
+            getline(cin, pwd);
+
+            for (int i = 0; i < user_count; i++) {
+                if (users[i].username == uname && users[i].password == pwd) {
+                    current_username = uname;
+                    return users[i].role;
+                }
+            }
+
+            cout << "[!] Login gagal — username/password salah. Tekan ENTER untuk coba lagi...";
+            cin.get();
+        }
+    }
+}
 
 // ============================================================
 // FUNGSI UTILITY / BANTUAN
@@ -206,143 +267,6 @@ bool is_future_date(const string& date) {
 // ===============================
 // AUTENTIKASI
 // ===============================
-void register_user() {
-    bersihkan_layar();
-    string username, password;
-
-    cout << "=====================================\n";
-    cout << "             REGISTER\n";
-    cout << "=====================================\n";
-
-    cout << "Username : ";
-    getline(cin, username);
-
-    // Cek username sudah ada atau belum
-    for (int i = 0; i < jumlahUser; i++) {
-        if (users[i].username == username) {
-            cout << "\nUsername sudah digunakan!\n";
-            cout << "\nTekan ENTER untuk kembali...";
-            cin.get();
-            return;
-        }
-    }
-
-    cout << "Password : ";
-    getline(cin, password);
-
-    // Register sebagai CUSTOMER (role tetap customer)
-    users[jumlahUser].username = username;
-    users[jumlahUser].password = password;
-    users[jumlahUser].role = "Customer";
-
-    jumlahUser++;
-
-    cout << "\n✓ Register berhasil sebagai Customer!\n";
-    cout << "\nTekan ENTER untuk lanjut ke Login...";
-    cin.get();
-}
-
-string login() {
-    bersihkan_layar();
-    
-    // Data default jika belum ada user
-    if (jumlahUser == 0) {
-        users[0] = {"gudang", "123", "Admin Gudang"};
-        users[1] = {"kasir", "123", "Kasir"};
-        jumlahUser = 2;
-    }
-    
-    int pilih;
-    string username, password;
-    
-    while (true) {
-        bersihkan_layar();
-        
-        cout << "========================================================\n";
-        cout << "         SISTEM MANAJEMEN BARANG MINIMARKET\n";
-        cout << "========================================================\n";
-        cout << "\nLogin untuk mulai berbelanja!\n\n";
-        cout << "1. Login\n";
-        cout << "2. Register\n";
-        cout << "0. Keluar\n\n";
-        cout << "Pilih menu : ";
-        cin >> pilih;
-        cin.ignore();
-        
-        if (pilih == 0) {
-            return "Keluar";
-        }
-        else if (pilih == 2) {
-            register_user();
-            continue;
-        }
-       	else if (pilih == 1) {
-		    string username, password;
-		    bool usernameDitemukan = false;
-		    int userIndex = -1;
-		    
-		    while (true) {  // Loop untuk percobaan username & password
-		        bersihkan_layar();
-		        
-		        cout << "========================================================\n";
-		        cout << "         SISTEM MANAJEMEN BARANG MINIMARKET\n";
-		        cout << "========================================================\n";
-		        cout << "\nLogin untuk mulai berbelanja!\n\n";
-		        
-		        // INPUT USERNAME
-		        cout << "Username : ";
-		        getline(cin, username);
-		        
-		        // VALIDASI USERNAME
-		        usernameDitemukan = false;
-		        for (int i = 0; i < jumlahUser; i++) {
-		            if (username == users[i].username) {
-		                usernameDitemukan = true;
-		                userIndex = i;
-		                break;
-		            }
-		        }
-		        
-		        // Jika username tidak ditemukan
-		        if (!usernameDitemukan) {
-		            cout << "\n✗ Username '" << username << "' tidak ditemukan!\n";
-		            cout << "Tekan ENTER untuk coba lagi...";
-		            cin.get();
-		            continue;  // Kembali ke awal loop (input username lagi)
-		        }
-		        
-		        // INPUT PASSWORD (hanya jika username ditemukan)
-		        cout << "Password : ";
-		        getline(cin, password);
-		        
-		        // VALIDASI PASSWORD
-		        if (password == users[userIndex].password) {
-		            // Login berhasil
-		            current_username = username;
-		            
-		            cout << "\n✓ Login berhasil sebagai " << users[userIndex].role << "!\n";
-		            cout << "\nTekan ENTER untuk melanjutkan...";
-		            cin.get();
-		            return users[userIndex].role;
-		        } else {
-		            // Password salah
-		            cout << "\n✗ Password salah untuk username '" << username << "'!\n";
-		            cout << "Tekan ENTER untuk coba lagi...";
-		            cin.get();
-		            continue;  // Kembali ke awal loop (input username lagi)
-		        }
-		    }
-		} else {
-            cout << "\nMenu tidak valid!\n";
-            cout << "Tekan ENTER untuk coba lagi...";
-            cin.get();
-        }
-    }
-}
-
-// ============================================================
-// KATEGORI BARANG
-// ============================================================
 void init_kat() {
 	root_kat = new KategoriNode("SEMUA BARANG", 0);
 	
@@ -364,6 +288,10 @@ void init_kat() {
 	perawatan->parent = root_kat;
 	alat_tulis->parent = root_kat;
 	lainnya->parent = root_kat;
+
+    users[0] = {"gudang", "123", "Admin Gudang", "Admin Gudang Utama", "Gudang Pusat", "08123456789"};
+    users[1] = {"kasir", "123", "Kasir", "Kasir Utama", "Counter 1", "08987654321"};
+    user_count = 2;
 }
 
 void tampilkan_kategori_tree(KategoriNode* node, string prefix = "", bool isLast = true) {
@@ -382,6 +310,74 @@ void tampilkan_kategori_tree(KategoriNode* node, string prefix = "", bool isLast
         child = child->next_sibling;
     }
 }
+
+void register_customer() {
+    bersihkan_layar();
+    cout << "=========================================\n";
+    cout << "           REGISTER CUSTOMER BARU        \n";
+    cout << "=========================================\n";
+
+    if (user_count >= 100) {
+        cout << "[!] Kuota pendaftaran pengguna sudah penuh!\n";
+        return;
+    }
+
+    string username, password, nama, alamat, no_telp;
+
+    // Membersihkan sisa enter dari menu utama agar getline tidak ter-skip
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    cout << "Masukkan Nama Lengkap   : ";
+    getline(cin, nama);
+    cout << "Masukkan Alamat         : ";
+    getline(cin, alamat);
+    cout << "Masukkan Nomor Telepon  : ";
+    getline(cin, no_telp);
+    
+    // 1. Bagian Cek Username Duplikat
+    while (true) {
+        cout << "Masukkan Username Baru  : ";
+        getline(cin, username);
+
+        bool ada = false;
+        for (int i = 0; i < user_count; i++) {
+            if (users[i].username == username) { // FIX: Pakai users
+                ada = true;
+                break;
+            }
+        }
+
+        if (ada) {
+            cout << "[!] Username sudah digunakan. Silakan cari username lain!\n\n";
+        } else {
+            break;
+        }
+    }
+
+    cout << "Masukkan Password       : ";
+    getline(cin, password);
+
+    // 2. Bagian Penyimpanan Data Baru (FIX: Semua ganti ke users)
+    users[user_count].username = username;
+    users[user_count].password = password;
+    users[user_count].role = "Customer";
+    users[user_count].nama_lengkap = nama;
+    users[user_count].alamat = alamat;
+    users[user_count].no_telp = no_telp;
+
+    user_count++;
+
+    tambah_log("Register", "Customer baru terdaftar: " + username + " (" + nama + ")");
+
+    cout << "-----------------------------------------\n";
+    cout << "[✓] Registrasi Berhasil!\n";
+    cout << "Silakan gunakan username dan password Anda untuk Login.\n";
+}
+
+// ============================================================
+// KATEGORI BARANG
+// ============================================================
+
 
 // Mencari kategori berdasarkan kode
 KategoriNode* cari_kategori_by_kode(KategoriNode* node, string kode) {
@@ -1285,87 +1281,98 @@ void update_status_pesanan() {
 }
 
 void transaksi_kasir() {
-
     bersihkan_layar();
 
-    string namaCustomer;
-    string kodeBarang;
-    int jumlah;
+    // Validasi antrean menggunakan 'frontQueue' bawaan kelompokmu
+    if (frontQueue == NULL) {
+        cout << "=========================================\n";
+        cout << "         SISTEM PEMBAYARAN KASIR        \n";
+        cout << "=========================================\n";
+        cout << "\n[!] Tidak ada antrean customer saat ini.\n";
+        return;
+    }
 
-    cout << "\n=========== TRANSAKSI KASIR ===========\n";
+    // Mengambil data customer terdepan dari antrean
+    string namaCustomer = frontQueue->nama_customer;
 
-    cout << "Nama customer : ";
-    getline(cin, namaCustomer);
+    cout << "=========================================\n";
+    cout << "         SISTEM PEMBAYARAN KASIR        \n";
+    cout << "=========================================\n";
+    cout << "Melayani Customer: " << namaCustomer << endl;
+    cout << "-----------------------------------------\n";
 
-    // masuk queue
-    enqueueCustomer(namaCustomer);
+    // Melacak daftar pesanan menggunakan 'headRiwayat' bawaan kelompokmu
+    RiwayatCustomer* currentPesanan = headRiwayat;
+    double grandTotal = 0;
+    int no = 1;
 
-    tampilkan_barang();
-
-    cout << "\nMasukkan kode barang : ";
-    getline(cin, kodeBarang);
-
-    NodeBarang* current = head;
-
-    while (current != NULL) {
-
-        if (toLowerCase(current->data.kode_barang)
-            == toLowerCase(kodeBarang)) {
-
-            break;
+    cout << "Daftar Belanjaan:\n";
+    while (currentPesanan != NULL) {
+        if (toLowerCase(currentPesanan->nama_customer) == toLowerCase(namaCustomer) && currentPesanan->status == "Diproses") {
+            cout << no++ << ". " << currentPesanan->barang 
+                 << " (x" << currentPesanan->jumlah << ")"
+                 << " | Total: Rp" << currentPesanan->total << endl;
+            grandTotal += currentPesanan->total;
         }
-
-        current = current->next;
+        currentPesanan = currentPesanan->next;
     }
 
-    if (current == NULL) {
-
-        cout << "\nBarang tidak ditemukan!\n";
-
-        dequeueCustomer();
+    if (grandTotal == 0) {
+        cout << "[!] Data belanjaan customer tidak ditemukan atau sudah dibayar.\n";
+        dequeueCustomer(); 
         return;
     }
 
-    cout << "Jumlah beli : ";
-    cin >> jumlah;
-    cin.ignore();
+    cout << "-----------------------------------------\n";
+    cout << "TOTAL YANG HARUS DIBAYAR: Rp" << grandTotal << endl;
+    cout << "-----------------------------------------\n";
 
-    if (jumlah > current->data.stok) {
+    double uangDibayar = 0;
+    while (true) {
+        cout << "Masukkan Uang Pembayaran: Rp";
+        cin >> uangDibayar;
+        cin.ignore();
 
-        cout << "\nStok tidak cukup!\n";
-
-        dequeueCustomer();
-        return;
+        if (uangDibayar >= grandTotal) {
+            break;
+        } else {
+            cout << "[!] Uang tidak cukup! Kurang Rp" << (grandTotal - uangDibayar) << ". Silakan input kembali.\n\n";
+        }
     }
 
-    // stok otomatis berkurang
-    current->data.stok -= jumlah;
+    double kembalian = uangDibayar - grandTotal;
+    cout << "Kembalian               : Rp" << kembalian << endl;
+    cout << "-----------------------------------------\n";
 
-    double total = jumlah * current->data.harga_jual;
-
-    // receipt
     string receipt =
-        "\n=========== RECEIPT ===========\n"
-        "Nama Customer : " + namaCustomer +
-        "\nBarang         : " + current->data.nama +
-        "\nJumlah         : " + to_string(jumlah) +
-        "\nHarga          : Rp" + to_string((int)current->data.harga_jual) +
-        "\nTotal          : Rp" + to_string((int)total) +
-        "\n================================";
+        "\n=========== MINIMARKET RECEIPT ===========\n"
+        "Nama Customer : " + namaCustomer + "\n"
+        "Total Belanja : Rp" + to_string((int)grandTotal) + "\n"
+        "Uang Tunai    : Rp" + to_string((int)uangDibayar) + "\n"
+        "Kembalian     : Rp" + to_string((int)kembalian) + "\n"
+        "Status        : LUNAS\n"
+        "==========================================";
 
     cout << receipt << endl;
 
-    // masuk stack transaksi
+    // Memasukkan nota belanja ke Stack transaksi kasir bawaan kelompokmu
     pushTransaksi(receipt);
 
-    // log
-    tambah_log(
-        "Transaksi",
-        namaCustomer + " membeli " + current->data.nama
-    );
+    // Mengubah status riwayat customer di linked list menjadi Selesai
+    currentPesanan = headRiwayat;
+    while (currentPesanan != NULL) {
+        if (toLowerCase(currentPesanan->nama_customer) == toLowerCase(namaCustomer) && currentPesanan->status == "Diproses") {
+            currentPesanan->status = "Selesai";
+        }
+        currentPesanan = currentPesanan->next;
+    }
 
-    // keluar queue
+    tambah_log("Pembayaran Kasir", "Pembayaran atas nama " + namaCustomer + " LUNAS sebesar Rp" + to_string((int)grandTotal));
+
+    // Keluarkan customer dari antrean queue setelah pembayaran sukses
     dequeueCustomer();
+
+    cout << "\n[✓] Transaksi berhasil diselesaikan!\n";
 }
 
 // =========================================
@@ -1396,41 +1403,41 @@ void tambah_riwayat_customer(string nama, string barang, int jumlah, double tota
 }
 
 void tampilkan_riwayat_customer(string namaCustomer) {
-
     bersihkan_layar();
+    cout << "=========================================\n";
+    cout << "       RIWAYAT PEMBELIAN & STATUS        \n";
+    cout << "=========================================\n";
 
-    if (headRiwayat == NULL) {
-        cout << "Belum ada riwayat pembelian.\n";
+    // Validasi apakah stack transaksi kosong atau tidak
+    // Sesuaikan 'topStack' jika di kodemu namanya 'top' atau sejenisnya
+    if (topTransaksi == NULL) {
+        cout << "[!] Belum ada riwayat transaksi di toko ini.\n";
         return;
     }
 
-    RiwayatCustomer* current = headRiwayat;
-
+    // Menggunakan temporary pointer untuk menelusuri Stack tanpa merusak data asli
+    // Sesuaikan 'NodeTransaksi' atau 'Stack' dengan nama struct stack kelompokmu
+    StackTransaksi* curr = topTransaksi;
     bool ditemukan = false;
     int no = 1;
 
-    cout << "\n======= RIWAYAT PEMBELIAN =======\n";
-
-    while (current != NULL) {
-
-        if (toLowerCase(current->nama_customer)
-            == toLowerCase(namaCustomer)) {
-
-            cout << no++ << ". "
-                 << current->barang
-                 << " | Jumlah: " << current->jumlah
-                 << " | Total: Rp" << current->total
-                 << " | Status: " << current->status
-                 << endl;
-
+    while (curr != NULL) {
+        // DEBUG FIX: Mencari apakah nama customer ada di dalam teks 'receipt' utuh
+        // Fungsi .find() akan mengembalikan nilai npos jika teks tidak ditemukan
+        if (curr->receipt.find(namaCustomer) != string::npos) {
             ditemukan = true;
+            cout << "Nota Ke-" << no++ << endl;
+            cout << "-----------------------------------------\n";
+            cout << curr->receipt << endl; // Langsung cetak isi nota utuhnya di sini
+            cout << "Status        : LUNAS (Selesai di Kasir)\n";
+            cout << "=========================================\n\n";
         }
-
-        current = current->next;
+        curr = curr->next; // Pindah ke tumpukan nota di bawahnya
     }
 
     if (!ditemukan) {
-        cout << "\nBelum ada transaksi.\n";
+        cout << "[!] Anda belum memiliki riwayat pembayaran.\n";
+        cout << "Silakan lakukan checkout dan selesaikan pembayaran di Kasir.\n";
     }
 }
 
@@ -1840,7 +1847,7 @@ void menu_kasir() {
         cin.ignore();
         
         switch (pilihan) {
-            case 1: transaksi_kasir(); break;
+            case 1: transaksi_kasir(); break; // Aman, langsung memanggil fungsi otomatis Rafa yang sudah di-debug tadi
             case 2: tampilkan_barang(); break;
             case 3: tampilkan_riwayat_transaksi(); break;
             case 4: tampilkan_log_barang(); break;
@@ -1859,25 +1866,144 @@ void menu_kasir() {
     }
 }
 
+void checkout_keranjang() {
+    bersihkan_layar();
+
+    if (head_keranjang == NULL) {
+        cout << "=========================================\n";
+        cout << "            CHECKOUT PESANAN             \n";
+        cout << "=========================================\n";
+        cout << "\n[!] Keranjang Anda masih kosong. Silakan belanja terlebih dahulu.\n";
+        return;
+    }
+
+    cout << "=========================================\n";
+    cout << "            CHECKOUT PESANAN             \n";
+    cout << "=========================================\n";
+    cout << "Nama Customer : " << current_username << endl;
+    cout << "-----------------------------------------\n";
+
+    Keranjang* current = head_keranjang;
+    int no = 1;
+    double grandTotal = 0;
+
+    while (current != NULL) {
+        double subtotal = current->jumlah * current->harga;
+        cout << no++ << ". " << current->nama_barang 
+             << " (x" << current->jumlah << ")"
+             << " | Harga: Rp" << current->harga 
+             << " | Subtotal: Rp" << subtotal << endl;
+        
+        grandTotal += subtotal;
+        current = current->next;
+    }
+
+    cout << "-----------------------------------------\n";
+    cout << "Total yang harus dibayar: Rp" << grandTotal << endl;
+    cout << "-----------------------------------------\n";
+
+    char konfirmasi;
+    cout << "Apakah Anda yakin ingin melakukan Checkout? (y/n): ";
+    cin >> konfirmasi;
+    cin.ignore();
+
+    if (konfirmasi == 'y' || konfirmasi == 'Y') {
+        // 1. Kurangi stok barang utama di Gudang/Toko
+        Keranjang* currKeranjang = headKeranjang;
+        while (currKeranjang != NULL) {
+            NodeBarang* currBarang = head;
+            while (currBarang != NULL) {
+                if (toLowerCase(currBarang->data.nama) == toLowerCase(currKeranjang->nama_barang)) {
+                    currBarang->data.stok -= currKeranjang->jumlah;
+                    break;
+                }
+                currBarang = currBarang->next;
+            }
+            currKeranjang = currKeranjang->next;
+        }
+
+        // =========================================================================
+        // JEMBATAN EMAS: Salin data dari Keranjang ke headRiwayat (Biar Kasir bisa baca)
+        // =========================================================================
+        currKeranjang = headKeranjang;
+        while (currKeranjang != NULL) {
+            RiwayatCustomer* baru = new RiwayatCustomer();
+            baru->nama_customer = current_username;
+            baru->barang = currKeranjang->nama_barang;
+            baru->jumlah = currKeranjang->jumlah;
+            baru->total = currKeranjang->jumlah * currKeranjang->harga;
+            baru->status = "Diproses"; // Kunci agar dibaca oleh kasir
+            baru->next = NULL;
+
+            // Masukkan ke Linked List headRiwayat kelompokmu
+            if (headRiwayat == NULL) {
+                headRiwayat = baru;
+            } else {
+                RiwayatCustomer* temp = headRiwayat;
+                while (temp->next != NULL) {
+                    temp = temp->next;
+                }
+                temp->next = baru;
+            }
+            currKeranjang = currKeranjang->next;
+        }
+
+        // 2. Memasukkan customer ke Queue Antrean Kasir
+        enqueueCustomer(current_username);
+
+        // 3. Mengosongkan isi keranjang belanja setelah disalin
+        currKeranjang = headKeranjang;
+        while (currKeranjang != NULL) {
+            Keranjang* hapus = currKeranjang;
+            currKeranjang = currKeranjang->next;
+            delete hapus;
+        }
+        headKeranjang = NULL;
+        tailKeranjang = NULL;
+
+        tambah_log("Checkout Customer", "Customer " + current_username + " berhasil checkout sebesar Rp" + to_string((int)grandTotal));
+
+        cout << "\n[✓] Checkout Berhasil!\n";
+        cout << "Pesanan Anda telah diteruskan ke Kasir.\n";
+        cout << "Silakan menuju ke Kasir untuk mengantre dan melakukan pembayaran.\n";
+    } else {
+        cout << "\n[!] Checkout dibatalkan. Barang tetap berada di keranjang Anda.\n";
+    }
+}
+
 // ===============================
 // MENU CUSTOMER
+// ===============================
 // ===============================
 void menu_customer() {
     int pilihan;
     
+    // Menarik biodata pelengkap dari array 'user' berdasarkan siapa yang sedang login
+    User userSekarang;
+    for (int i = 0; i < user_count; i++) {
+        if (users[i].username == current_username) {
+            userSekarang = users[i];
+            break;
+        }
+    }
+    
     while (true) {
         bersihkan_layar();
         
-       cout << "\n=========================================\n";
+        cout << "\n=========================================\n";
         cout << "            MENU CUSTOMER\n";
         cout << "=========================================\n";
-        cout << "\nSelamat datang, " << current_username << endl << "! Butuh apa hari ini?\n";
+        cout << "Selamat Datang, " << userSekarang.nama_lengkap << "!\n";
+        cout << "Alamat Kirim  : " << userSekarang.alamat << "\n";
+        cout << "No. Telepon   : " << userSekarang.no_telp << "\n";
+        cout << "-----------------------------------------\n";
         cout << "1. Lihat Barang" << endl;
         cout << "2. Cari Barang" << endl;
         cout << "3. Tambah Keranjang" << endl;
         cout << "4. Tampilkan Keranjang" << endl;
         cout << "5. Hapus Keranjang" << endl;
-        cout << "6. Riwayat Pembelian" << endl;
+        cout << "6. CHECKOUT PESANAN (Rafa)" << endl; // Mengaktifkan menu checkout Rafa
+        cout << "7. Riwayat Pembelian & Status" << endl;
         cout << "0. Logout" << endl;
         cout << "-----------------------------------------\n";
         cout << "Pilih menu : ";
@@ -1891,10 +2017,11 @@ void menu_customer() {
             case 3: tambah_ke_keranjang(); break;
             case 4: tampilkan_keranjang(); break;
             case 5: hapus_keranjang(); break;
-            case 6: tampilkan_riwayat_customer(current_username); break; // Pakai username global
+            case 6: checkout_keranjang(); break; // Memanggil fitur checkout Rafa
+            case 7: tampilkan_riwayat_customer(current_username); break; 
             case 0:
                 cout << "Logout berhasil!\n";
-                current_username = ""; // Reset username
+                current_username = ""; 
                 return;
             default:
                 cout << "\nMenu tidak valid!\n";
