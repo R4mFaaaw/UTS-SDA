@@ -1277,6 +1277,26 @@ void update_status_pesanan() {
     if(current != NULL){
         current->status = "Selesai";
         cout << "\nStatus pesanan berhasil diubah menjadi Selesai!\n";
+
+        // =========================================================================
+        // JEMBATAN OTOMATIS: Update status di dalam teks Struk/Receipt yang ada di Stack
+        // =========================================================================
+        string namaTarget = current->nama_customer; // Mengambil nama kustomer dari nomor yang dipilih
+        StackTransaksi* currStack = topTransaksi;
+        
+        while (currStack != NULL) {
+            // Cari struk milik kustomer tersebut di dalam tumpukan Stack
+            if (currStack->receipt.find(namaTarget) != string::npos) {
+                size_t posStatus = currStack->receipt.find("Status        :");
+                if (posStatus != string::npos) {
+                    // Potong teks nota lama, ganti teks statusnya menjadi PESANAN TELAH SAMPAI
+                    string receiptBaru = currStack->receipt.substr(0, posStatus);
+                    receiptBaru += "Status        : PESANAN TELAH SAMPAI\n==========================================";
+                    currStack->receipt = receiptBaru;
+                }
+            }
+            currStack = currStack->next; // Cek tumpukan nota di bawahnya
+        }
     }
 }
 
@@ -1436,18 +1456,19 @@ void tampilkan_riwayat_customer(string namaCustomer) {
             cout << curr->receipt << endl; // Mencetak struk asli dari stack
         
             // =========================================================================
-            // FIX DEBUG: Deteksi teks struk untuk menampilkan status real-time
+            // DETEKSI REAL-TIME STATUS STRUK DI MENU CUSTOMER
             // =========================================================================
-            if (curr->receipt.find("Transfer Bank / E-Wallet") != string::npos) {
+            if (curr->receipt.find("PESANAN TELAH SAMPAI") != string::npos) {
+                cout << "Status Pembayaran : SELESAI\n";
+                cout << "Status Barang     : PESANAN TELAH SAMPAI (Diterima)\n";
+            } 
+            else if (curr->receipt.find("Transfer Bank / E-Wallet") != string::npos) {
                 cout << "Status Pembayaran : LUNAS (Otomatis)\n";
                 cout << "Status Barang     : SEDANG DIPROSES TOKO\n";
             } 
             else if (curr->receipt.find("COD (Cash on Delivery)") != string::npos) {
                 cout << "Status Pembayaran : BELUM BAYAR (COD)\n";
                 cout << "Status Barang     : SEDANG DIPROSES (KIRIM)\n";
-            } 
-            else {
-                cout << "Status            : LUNAS (Selesai di Kasir)\n";
             }
             cout << "=========================================\n\n";
         }
