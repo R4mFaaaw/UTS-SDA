@@ -93,8 +93,7 @@ void init_kategori_default() {
     kosmetik->parent = perawatanKesehatan;
     obat->parent = perawatanKesehatan;
     
-    // ===== LEVEL 3 - Sub-subkategori (opsional, bisa ditambahkan) =====
-    // Contoh: Menambahkan subkategori di bawah Makanan Ringan
+    // ===== LEVEL 3 - Sub-subkategori Makanan Ringan =====
     KategoriNode* keripik = new KategoriNode("Keripik", 3);
     KategoriNode* biskuit = new KategoriNode("Biskuit", 3);
     KategoriNode* coklat = new KategoriNode("Coklat & Permen", 3);
@@ -107,7 +106,7 @@ void init_kategori_default() {
     biskuit->parent = makananRingan;
     coklat->parent = makananRingan;
     
-    // Contoh: Subkategori Minuman
+    // ===== LEVEL 3 - Subkategori Minuman =====
     KategoriNode* airMineral = new KategoriNode("Air Mineral", 3);
     KategoriNode* minumanRingan = new KategoriNode("Minuman Ringan", 3);
     KategoriNode* minumanIsotonic = new KategoriNode("Minuman Isotonik", 3);
@@ -120,7 +119,7 @@ void init_kategori_default() {
     minumanRingan->parent = minuman;
     minumanIsotonic->parent = minuman;
     
-    // Contoh: Subkategori Alat Kebersihan
+    // ===== LEVEL 3 - Subkategori Alat Kebersihan =====
     KategoriNode* deterjen = new KategoriNode("Deterjen & Pewangi", 3);
     KategoriNode* pembersihLantai = new KategoriNode("Pembersih Lantai", 3);
     
@@ -131,19 +130,28 @@ void init_kategori_default() {
     pembersihLantai->parent = alatKebersihan;
 }
 
-// Menampilkan kategori (preorder traversal dengan indikator garis)
+// Menampilkan kategori dengan karakter ASCII standar (+, -, |)
 void tampilkan_kategori(KategoriNode* node, string prefix = "", bool isLast = true) {
     if (node == NULL) return;
     
     // Cetak node saat ini
     cout << prefix;
-    cout << (isLast ? "+-- " : "+-- ");
-    cout << node->nama << " (" << node->kode_kategori << ")" << endl;
+    
+    // Untuk root, tidak perlu garis
+    if (node->level == 0) {
+        cout << node->nama << " (" << node->kode_kategori << ")" << endl;
+    } else {
+        cout << (isLast ? "+-- " : "+-- ");
+        cout << node->nama << " (" << node->kode_kategori << ")" << endl;
+    }
     
     // Siapkan prefix untuk anak-anak
-    string childPrefix = prefix + (isLast ? "    " : "¦   ");
+    string childPrefix = prefix;
+    if (node->level > 0) {
+        childPrefix += (isLast ? "    " : "|   ");
+    }
     
-    // Rekursif ke anak-anak (firstChild dan nextSibling-nya)
+    // Rekursif ke anak-anak
     KategoriNode* child = node->firstChild;
     while (child != NULL) {
         bool isLastChild = (child->nextSibling == NULL);
@@ -152,16 +160,44 @@ void tampilkan_kategori(KategoriNode* node, string prefix = "", bool isLast = tr
     }
 }
 
-// Mencari kategori berdasarkan nama (dengan path lengkap)
+// Menampilkan kategori dengan indikator level (versi ASCII)
+void tampilkan_kategori_dengan_level(KategoriNode* node, int targetLevel = -1, string prefix = "", bool isLast = true) {
+    if (node == NULL) return;
+    
+    // Filter berdasarkan level jika targetLevel > 0
+    if (targetLevel == -1 || node->level <= targetLevel) {
+        if (node->level == 0) {
+            cout << node->nama << " (" << node->kode_kategori << ") [Level " << node->level << "]" << endl;
+        } else {
+            cout << prefix;
+            cout << (isLast ? "+-- " : "+-- ");
+            cout << node->nama << " (" << node->kode_kategori << ") [Level " << node->level << "]" << endl;
+        }
+    }
+    
+    // Siapkan prefix untuk anak-anak
+    string childPrefix = prefix;
+    if (node->level > 0) {
+        childPrefix += (isLast ? "    " : "|   ");
+    }
+    
+    // Rekursif ke anak-anak
+    KategoriNode* child = node->firstChild;
+    while (child != NULL) {
+        bool isLastChild = (child->nextSibling == NULL);
+        tampilkan_kategori_dengan_level(child, targetLevel, childPrefix, isLastChild);
+        child = child->nextSibling;
+    }
+}
+
+// Mencari kategori berdasarkan nama
 KategoriNode* cari_kategori(KategoriNode* node, string nama) {
     if (node == NULL) return NULL;
     if (node->nama == nama) return node;
     
-    // Cari di anak
     KategoriNode* found = cari_kategori(node->firstChild, nama);
     if (found != NULL) return found;
     
-    // Cari di saudara
     return cari_kategori(node->nextSibling, nama);
 }
 
@@ -176,7 +212,7 @@ KategoriNode* cari_kategori_by_kode(KategoriNode* node, string kode) {
     return cari_kategori_by_kode(node->nextSibling, kode);
 }
 
-// Menambah kategori baru di bawah kategori induk
+// Menambah kategori baru
 bool tambah_kategori(string nama_induk, string nama_baru) {
     if (rootKategori == NULL) {
         cout << "Tree kategori belum diinisialisasi!\n";
@@ -185,15 +221,15 @@ bool tambah_kategori(string nama_induk, string nama_baru) {
     
     KategoriNode* parent = cari_kategori(rootKategori, nama_induk);
     if (parent == NULL) {
-        cout << "Kategori induk '" << nama_induk << "' tidak ditemukan!\n";
+        cout << "[X] Kategori induk '" << nama_induk << "' tidak ditemukan!\n";
         return false;
     }
     
-    // Cek apakah nama sudah ada di level yang sama
+    // Cek duplikat
     KategoriNode* existing = parent->firstChild;
     while (existing != NULL) {
         if (existing->nama == nama_baru) {
-            cout << "Kategori '" << nama_baru << "' sudah ada di bawah '" << nama_induk << "'!\n";
+            cout << "[X] Kategori '" << nama_baru << "' sudah ada di bawah '" << nama_induk << "'!\n";
             return false;
         }
         existing = existing->nextSibling;
@@ -202,7 +238,6 @@ bool tambah_kategori(string nama_induk, string nama_baru) {
     KategoriNode* baru = new KategoriNode(nama_baru, parent->level + 1);
     baru->parent = parent;
     
-    // Tambahkan sebagai anak terakhir
     if (parent->firstChild == NULL) {
         parent->firstChild = baru;
     } else {
@@ -213,11 +248,11 @@ bool tambah_kategori(string nama_induk, string nama_baru) {
         sibling->nextSibling = baru;
     }
     
-    cout << "Kategori '" << nama_baru << "' berhasil ditambahkan di bawah '" << nama_induk << "'\n";
+    cout << "[OK] Kategori '" << nama_baru << "' berhasil ditambahkan di bawah '" << nama_induk << "' (Level " << baru->level << ")\n";
     return true;
 }
 
-// Mendapatkan path lengkap kategori (root > child > subchild)
+// Mendapatkan path lengkap kategori
 string get_kategori_path(KategoriNode* node) {
     if (node == NULL) return "";
     if (node->parent == NULL || node->nama == "SEMUA BARANG") 
@@ -226,34 +261,40 @@ string get_kategori_path(KategoriNode* node) {
     return get_kategori_path(node->parent) + " > " + node->nama;
 }
 
-// Menampilkan semua leaf (kategori paling bawah) untuk pemilihan barang
+// Menampilkan semua leaf (versi ASCII)
 void tampilkan_leaf_kategori(KategoriNode* node) {
     if (node == NULL) return;
     
-    // Jika tidak punya anak dan bukan root, dia leaf
     if (node->firstChild == NULL && node->nama != "SEMUA BARANG") {
-        cout << "  • " << get_kategori_path(node) << endl;
+        // Tampilkan dengan indentasi berdasarkan level
+        for (int i = 0; i < node->level; i++) {
+            cout << "  ";
+        }
+        cout << "- " << node->nama << " (" << node->kode_kategori << ")" << endl;
+        cout << "  " << string(node->level * 2 + 2, ' ') << "  Path: " << get_kategori_path(node) << endl;
     }
     
     tampilkan_leaf_kategori(node->firstChild);
     tampilkan_leaf_kategori(node->nextSibling);
 }
 
-// Menampilkan kategori berdasarkan level
-void tampilkan_kategori_by_level(KategoriNode* node, int targetLevel, int currentLevel = 0) {
+// Menampilkan kategori berdasarkan level tertentu (versi ASCII)
+void tampilkan_kategori_by_level(KategoriNode* node, int targetLevel) {
     if (node == NULL) return;
     
-    if (currentLevel == targetLevel && node->nama != "SEMUA BARANG") {
+    if (node->level == targetLevel && node->nama != "SEMUA BARANG") {
         string indent = "";
-        for (int i = 0; i < currentLevel; i++) indent += "  ";
-        cout << indent << "• " << node->nama << " (" << node->kode_kategori << ")" << endl;
+        for (int i = 0; i < node->level; i++) {
+            indent += "  ";
+        }
+        cout << indent << "+- " << node->nama << " (" << node->kode_kategori << ")" << endl;
     }
     
-    tampilkan_kategori_by_level(node->firstChild, targetLevel, currentLevel + 1);
-    tampilkan_kategori_by_level(node->nextSibling, targetLevel, currentLevel);
+    tampilkan_kategori_by_level(node->firstChild, targetLevel);
+    tampilkan_kategori_by_level(node->nextSibling, targetLevel);
 }
 
-// Hapus seluruh tree (untuk cleanup)
+// Hapus seluruh tree
 void hapus_tree(KategoriNode* node) {
     if (node == NULL) return;
     
@@ -274,10 +315,11 @@ void menu_kategori() {
         cout << "1. Tampilkan semua kategori (Tree View)\n";
         cout << "2. Tampilkan kategori level 1 (Utama)\n";
         cout << "3. Tampilkan kategori level 2 (Subkategori)\n";
-        cout << "4. Tampilkan kategori terbawah (Leaf)\n";
-        cout << "5. Tambah kategori baru\n";
-        cout << "6. Cari kategori berdasarkan nama\n";
-        cout << "7. Cari kategori berdasarkan kode\n";
+        cout << "4. Tampilkan kategori level 3 (Sub-subkategori)\n";
+        cout << "5. Tampilkan kategori terbawah (Leaf)\n";
+        cout << "6. Tambah kategori baru\n";
+        cout << "7. Cari kategori berdasarkan nama\n";
+        cout << "8. Cari kategori berdasarkan kode\n";
         cout << "0. Kembali\n";
         cout << "----------------------------------------\n";
         cout << "Pilih: ";
@@ -292,19 +334,23 @@ void menu_kategori() {
                 tampilkan_kategori(rootKategori);
                 break;
             case 2:
-                cout << "\n=== KATEGORI UTAMA (LEVEL 1) ===\n";
+                cout << "\n=== KATEGORI LEVEL 1 (UTAMA) ===\n";
                 tampilkan_kategori_by_level(rootKategori, 1);
                 break;
             case 3:
-                cout << "\n=== SUBKATEGORI (LEVEL 2) ===\n";
+                cout << "\n=== KATEGORI LEVEL 2 (SUBKATEGORI) ===\n";
                 tampilkan_kategori_by_level(rootKategori, 2);
                 break;
             case 4:
+                cout << "\n=== KATEGORI LEVEL 3 (SUB-SUBKATEGORI) ===\n";
+                tampilkan_kategori_by_level(rootKategori, 3);
+                break;
+            case 5:
                 cout << "\n=== KATEGORI TERBAWAH (LEAF) ===\n";
                 cout << "(Kategori yang bisa dipilih untuk barang)\n\n";
                 tampilkan_leaf_kategori(rootKategori);
                 break;
-            case 5:
+            case 6:
                 cout << "\n=== TAMBAH KATEGORI BARU ===\n";
                 cout << "Masukkan nama kategori induk: ";
                 getline(cin, nama_induk);
@@ -312,33 +358,36 @@ void menu_kategori() {
                 getline(cin, nama_baru);
                 tambah_kategori(nama_induk, nama_baru);
                 break;
-            case 6:
+            case 7:
                 cout << "\nMasukkan nama kategori yang dicari: ";
                 getline(cin, nama_cari);
-                KategoriNode* hasil;
-                hasil = cari_kategori(rootKategori, nama_cari);
-                if (hasil) {
-                    cout << "\n? Kategori DITEMUKAN!\n";
-                    cout << "  Nama    : " << hasil->nama << endl;
-                    cout << "  Kode    : " << hasil->kode_kategori << endl;
-                    cout << "  Level   : " << hasil->level << endl;
-                    cout << "  Path    : " << get_kategori_path(hasil) << endl;
-                } else {
-                    cout << "\n? Kategori '" << nama_cari << "' tidak ditemukan!\n";
+                {  // Block scope untuk hasil
+                    KategoriNode* hasil = cari_kategori(rootKategori, nama_cari);
+                    if (hasil) {
+                        cout << "\n[V] Kategori DITEMUKAN!\n";
+                        cout << "  Nama    : " << hasil->nama << endl;
+                        cout << "  Kode    : " << hasil->kode_kategori << endl;
+                        cout << "  Level   : " << hasil->level << endl;
+                        cout << "  Path    : " << get_kategori_path(hasil) << endl;
+                    } else {
+                        cout << "\n[X] Kategori '" << nama_cari << "' tidak ditemukan!\n";
+                    }
                 }
                 break;
-            case 7:
+            case 8:
                 cout << "\nMasukkan kode kategori yang dicari: ";
                 getline(cin, nama_cari);
-                hasil = cari_kategori_by_kode(rootKategori, nama_cari);
-                if (hasil) {
-                    cout << "\n? Kategori DITEMUKAN!\n";
-                    cout << "  Nama    : " << hasil->nama << endl;
-                    cout << "  Kode    : " << hasil->kode_kategori << endl;
-                    cout << "  Level   : " << hasil->level << endl;
-                    cout << "  Path    : " << get_kategori_path(hasil) << endl;
-                } else {
-                    cout << "\n? Kategori dengan kode '" << nama_cari << "' tidak ditemukan!\n";
+                {  // Block scope untuk hasil
+                    KategoriNode* hasil = cari_kategori_by_kode(rootKategori, nama_cari);
+                    if (hasil) {
+                        cout << "\n[V] Kategori DITEMUKAN!\n";
+                        cout << "  Nama    : " << hasil->nama << endl;
+                        cout << "  Kode    : " << hasil->kode_kategori << endl;
+                        cout << "  Level   : " << hasil->level << endl;
+                        cout << "  Path    : " << get_kategori_path(hasil) << endl;
+                    } else {
+                        cout << "\n[X] Kategori dengan kode '" << nama_cari << "' tidak ditemukan!\n";
+                    }
                 }
                 break;
             default:
@@ -350,22 +399,26 @@ void menu_kategori() {
     }
 }
 
-// Fungsi untuk mendapatkan kategori dari pilihan user (untuk integrasi dengan barang)
+// Fungsi untuk memilih kategori dari leaf
 string pilih_kategori_untuk_barang() {
     cout << "\n=== PILIH KATEGORI UNTUK BARANG ===\n";
     cout << "Kategori yang tersedia (Leaf):\n";
     tampilkan_leaf_kategori(rootKategori);
     
-    string nama_kategori;
+    string kode_kategori;
     while (true) {
-        cout << "\nMasukkan nama kategori (tepat sesuai daftar): ";
-        getline(cin, nama_kategori);
+        cout << "\nMasukkan KODE kategori (contoh: CAT016): ";
+        getline(cin, kode_kategori);
         
-        KategoriNode* kategori = cari_kategori(rootKategori, nama_kategori);
+        KategoriNode* kategori = cari_kategori_by_kode(rootKategori, kode_kategori);
         if (kategori != NULL && kategori->firstChild == NULL) {
-            return nama_kategori;
+            cout << "[OK] Memilih kategori: " << kategori->nama << " (Level " << kategori->level << ")" << endl;
+            return kategori->nama;
+        } else if (kategori != NULL && kategori->firstChild != NULL) {
+            cout << "[X] '" << kategori->nama << "' bukan kategori leaf (masih memiliki subkategori)!\n";
+        } else {
+            cout << "[X] Kode kategori '" << kode_kategori << "' tidak ditemukan!\n";
         }
-        cout << "Kategori tidak valid atau bukan kategori leaf! Pilih dari daftar.\n";
     }
 }
 
@@ -382,10 +435,17 @@ int main() {
     cout << "\n=== STRUKTUR KATEGORI DEFAULT ===\n";
     tampilkan_kategori(rootKategori);
     
+    // Tampilkan informasi level
+    cout << "\n=== INFORMASI LEVEL KATEGORI ===\n";
+    cout << "Level 0: Root (SEMUA BARANG)\n";
+    cout << "Level 1: Kategori Utama (Makanan & Minuman, Kebutuhan Rumah Tangga, dll)\n";
+    cout << "Level 2: Subkategori (Makanan Ringan, Minuman, Peralatan Mandi, dll)\n";
+    cout << "Level 3: Sub-subkategori (Keripik, Air Mineral, Deterjen, dll)\n";
+    
     // Menu interaktif
     menu_kategori();
     
-    // Cleanup (hapus tree untuk menghindari memory leak)
+    // Cleanup
     hapus_tree(rootKategori);
     
     cout << "\nTerima kasih!\n";

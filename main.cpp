@@ -254,6 +254,7 @@ string login() {
     
     int pilih;
     string username, password;
+    string input;
     
     while (true) {
         bersihkan_layar();
@@ -266,8 +267,44 @@ string login() {
         cout << "2. Register\n";
         cout << "0. Keluar\n\n";
         cout << "Pilih menu : ";
-        cin >> pilih;
-        cin.ignore();
+        
+        // Validasi input pilihan menu tidak boleh kosong
+        while (true) {
+            getline(cin, input);
+            
+            if (input.empty()) {
+                cout << "\nPilihan tidak boleh kosong!\n";
+                cout << "Tekan ENTER untuk coba lagi...";
+                cin.get();
+                bersihkan_layar();
+        
+		        cout << "========================================================\n";
+		        cout << "         SISTEM MANAJEMEN BARANG MINIMARKET\n";
+		        cout << "========================================================\n";
+		        cout << "\nLogin untuk mulai berbelanja!\n\n";
+		        cout << "1. Login\n";
+		        cout << "2. Register\n";
+		        cout << "0. Keluar\n\n";
+		        cout << "Pilih menu : ";
+                continue;
+            }
+            
+            bool valid = true;
+            for (int i = 0; i < input.length(); i++) {
+                if (!isdigit(input[i])) {
+                    valid = false;
+                    break;
+                }
+            }
+            
+            if (!valid) {
+                cout << "\n⚠ Input harus berupa angka! Masukkan lagi: ";
+                continue;
+            }
+            
+            pilih = atoi(input.c_str());
+            break;
+        }
         
         if (pilih == 0) {
             return "Keluar";
@@ -276,111 +313,271 @@ string login() {
             register_user();
             continue;
         }
-       	else if (pilih == 1) {
-		    string username, password;
-		    bool usernameDitemukan = false;
-		    int userIndex = -1;
-		    
-		    while (true) {  // Loop untuk percobaan username & password
-		        bersihkan_layar();
-		        
-		        cout << "========================================================\n";
-		        cout << "         SISTEM MANAJEMEN BARANG MINIMARKET\n";
-		        cout << "========================================================\n";
-		        cout << "\nLogin untuk mulai berbelanja!\n\n";
-		        
-		        // INPUT USERNAME
-		        cout << "Username : ";
-		        getline(cin, username);
-		        
-		        // VALIDASI USERNAME
-		        usernameDitemukan = false;
-		        for (int i = 0; i < jumlahUser; i++) {
-		            if (username == users[i].username) {
-		                usernameDitemukan = true;
-		                userIndex = i;
-		                break;
-		            }
-		        }
-		        
-		        // Jika username tidak ditemukan
-		        if (!usernameDitemukan) {
-		            cout << "\n✗ Username '" << username << "' tidak ditemukan!\n";
-		            cout << "Tekan ENTER untuk coba lagi...";
-		            cin.get();
-		            continue;  // Kembali ke awal loop (input username lagi)
-		        }
-		        
-		        // INPUT PASSWORD (hanya jika username ditemukan)
-		        cout << "Password : ";
-		        getline(cin, password);
-		        
-		        // VALIDASI PASSWORD
-		        if (password == users[userIndex].password) {
-		            // Login berhasil
-		            current_username = username;
-		            
-		            cout << "\n✓ Login berhasil sebagai " << users[userIndex].role << "!\n";
-		            cout << "\nTekan ENTER untuk melanjutkan...";
-		            cin.get();
-		            return users[userIndex].role;
-		        } else {
-		            // Password salah
-		            cout << "\n✗ Password salah untuk username '" << username << "'!\n";
-		            cout << "Tekan ENTER untuk coba lagi...";
-		            cin.get();
-		            continue;  // Kembali ke awal loop (input username lagi)
-		        }
-		    }
-		} else {
-            cout << "\nMenu tidak valid!\n";
+        else if (pilih == 1) {
+            string username, password;
+            bool usernameDitemukan = false;
+            int userIndex = -1;
+            
+            while (true) {  // Loop untuk percobaan username & password
+                bersihkan_layar();
+                
+                cout << "========================================================\n";
+                cout << "         SISTEM MANAJEMEN BARANG MINIMARKET\n";
+                cout << "========================================================\n";
+                cout << "\nLogin untuk mulai berbelanja!\n\n";
+                
+                // INPUT USERNAME dengan validasi tidak boleh kosong
+                while (true) {
+                    cout << "Username : ";
+                    getline(cin, username);
+                    
+                    if (username.empty()) {
+                        cout << "\n⚠ Username tidak boleh kosong!\n";
+                        cout << "Tekan ENTER untuk coba lagi...";
+                        cin.get();
+                        bersihkan_layar();
+                        cout << "========================================================\n";
+                        cout << "         SISTEM MANAJEMEN BARANG MINIMARKET\n";
+                        cout << "========================================================\n";
+                        cout << "\nLogin untuk mulai berbelanja!\n\n";
+                        continue;
+                    }
+                    break;
+                }
+                
+                // VALIDASI USERNAME
+                usernameDitemukan = false;
+                for (int i = 0; i < jumlahUser; i++) {
+                    if (username == users[i].username) {
+                        usernameDitemukan = true;
+                        userIndex = i;
+                        break;
+                    }
+                }
+                
+                // Jika username tidak ditemukan
+                if (!usernameDitemukan) {
+                    cout << "\n✗ Username '" << username << "' tidak ditemukan!\n";
+                    cout << "Tekan ENTER untuk coba lagi...";
+                    cin.get();
+                    continue;  // Kembali ke awal loop (input username lagi)
+                }
+                
+                // INPUT PASSWORD dengan validasi tidak boleh kosong
+                while (true) {
+                    cout << "Password : ";
+                    getline(cin, password);
+                    
+                    if (password.empty()) {
+                        cout << "\n⚠ Password tidak boleh kosong!\n";
+                        cout << "Tekan ENTER untuk coba lagi...";
+                        cin.get();
+                        bersihkan_layar();
+                        cout << "========================================================\n";
+                        cout << "         SISTEM MANAJEMEN BARANG MINIMARKET\n";
+                        cout << "========================================================\n";
+                        cout << "\nLogin untuk mulai berbelanja!\n\n";
+                        cout << "Username : " << username << endl;
+                        continue;
+                    }
+                    break;
+                }
+                
+                // VALIDASI PASSWORD
+                if (password == users[userIndex].password) {
+                    // Login berhasil
+                    current_username = username;
+                    
+                    cout << "\nLogin berhasil sebagai " << users[userIndex].role << "!\n";
+                    cout << "\nTekan ENTER untuk melanjutkan...";
+                    cin.get();
+                    return users[userIndex].role;
+                } else {
+                    // Password salah
+                    cout << "\n✗ Password salah untuk username '" << username << "'!\n";
+                    cout << "Tekan ENTER untuk coba lagi...";
+                    cin.get();
+                    continue;  // Kembali ke awal loop (input username lagi)
+                }
+            }
+        } else {
+            cout << "\n⚠ Menu tidak valid! Pilih 1, 2, atau 0.\n";
             cout << "Tekan ENTER untuk coba lagi...";
             cin.get();
         }
     }
 }
-
 // ============================================================
 // KATEGORI BARANG
 // ============================================================
 void init_kat() {
 	root_kat = new KategoriNode("SEMUA BARANG", 0);
-	
-	// lvl 1
-	KategoriNode* makanan_minuman = new KategoriNode("Makanan & Minuman", 1);
-	KategoriNode* rumah_tangga = new KategoriNode("Kebutuhan Rumah Tangga", 1);
-	KategoriNode* perawatan = new KategoriNode("Perawatan Diri & Kesehatan", 1);
-	KategoriNode* alat_tulis = new KategoriNode("Alat Tulis & Kantor", 1);
-	KategoriNode* lainnya = new KategoriNode("Lainnya", 1);
-	
-	root_kat->first_child = makanan_minuman;
-	makanan_minuman->next_sibling = rumah_tangga;
-	rumah_tangga->next_sibling = perawatan;
-	perawatan->next_sibling = alat_tulis;
-	alat_tulis->next_sibling = lainnya;
-	
-	makanan_minuman->parent = root_kat;
-	rumah_tangga->parent = root_kat;
-	perawatan->parent = root_kat;
-	alat_tulis->parent = root_kat;
-	lainnya->parent = root_kat;
+    
+    // Level 1 - Kategori Utama
+    KategoriNode* makananMinuman = new KategoriNode("Makanan & Minuman", 1);
+    KategoriNode* rumahTangga = new KategoriNode("Kebutuhan Rumah Tangga", 1);
+    KategoriNode* perawatanKesehatan = new KategoriNode("Perawatan Diri & Kesehatan", 1);
+    KategoriNode* alatTulis = new KategoriNode("Alat Tulis & Kantor", 1);
+    KategoriNode* lainnya = new KategoriNode("Lainnya", 1);
+    
+    // Hubungkan ke root
+    root_kat->first_child = makananMinuman;
+    makananMinuman->next_sibling = rumahTangga;
+    rumahTangga->next_sibling = perawatanKesehatan;
+    perawatanKesehatan->next_sibling = alatTulis;
+    alatTulis->next_sibling = lainnya;
+    
+    makananMinuman->parent = root_kat;
+    rumahTangga->parent = root_kat;
+    perawatanKesehatan->parent = root_kat;
+    alatTulis->parent = root_kat;
+    lainnya->parent = root_kat;
+    
+    // ===== LEVEL 2 - Subkategori Makanan & Minuman =====
+    KategoriNode* makananRingan = new KategoriNode("Makanan Ringan", 2);
+    KategoriNode* makananInstan = new KategoriNode("Makanan Instan", 2);
+    KategoriNode* minuman = new KategoriNode("Minuman", 2);
+    
+    makananMinuman->first_child = makananRingan;
+    makananRingan->next_sibling = makananInstan;
+    makananInstan->next_sibling = minuman;
+    
+    makananRingan->parent = makananMinuman;
+    makananInstan->parent = makananMinuman;
+    minuman->parent = makananMinuman;
+    
+    // ===== LEVEL 2 - Subkategori Kebutuhan Rumah Tangga =====
+    KategoriNode* peralatanMandi = new KategoriNode("Peralatan Mandi", 2);
+    KategoriNode* alatKebersihan = new KategoriNode("Alat Kebersihan", 2);
+    KategoriNode* peralatanDapur = new KategoriNode("Peralatan Dapur", 2);
+    
+    rumahTangga->first_child = peralatanMandi;
+    peralatanMandi->next_sibling = alatKebersihan;
+    alatKebersihan->next_sibling = peralatanDapur;
+    
+    peralatanMandi->parent = rumahTangga;
+    alatKebersihan->parent = rumahTangga;
+    peralatanDapur->parent = rumahTangga;
+    
+    // ===== LEVEL 2 - Subkategori Perawatan Diri & Kesehatan =====
+    KategoriNode* perawatanTubuh = new KategoriNode("Perawatan Tubuh", 2);
+    KategoriNode* kosmetik = new KategoriNode("Kosmetik", 2);
+    KategoriNode* obat = new KategoriNode("Obat-obatan", 2);
+    
+    perawatanKesehatan->first_child = perawatanTubuh;
+    perawatanTubuh->next_sibling = kosmetik;
+    kosmetik->next_sibling = obat;
+    
+    perawatanTubuh->parent = perawatanKesehatan;
+    kosmetik->parent = perawatanKesehatan;
+    obat->parent = perawatanKesehatan;
+    
+    // ===== LEVEL 3 - Sub-subkategori Makanan Ringan =====
+    KategoriNode* keripik = new KategoriNode("Keripik", 3);
+    KategoriNode* biskuit = new KategoriNode("Biskuit", 3);
+    KategoriNode* coklat = new KategoriNode("Coklat & Permen", 3);
+    
+    makananRingan->first_child = keripik;
+    keripik->next_sibling = biskuit;
+    biskuit->next_sibling = coklat;
+    
+    keripik->parent = makananRingan;
+    biskuit->parent = makananRingan;
+    coklat->parent = makananRingan;
+    
+    // ===== LEVEL 3 - Subkategori Minuman =====
+    KategoriNode* airMineral = new KategoriNode("Air Mineral", 3);
+    KategoriNode* minumanRingan = new KategoriNode("Minuman Ringan", 3);
+    KategoriNode* minumanIsotonic = new KategoriNode("Minuman Isotonik", 3);
+    
+    minuman->first_child = airMineral;
+    airMineral->next_sibling = minumanRingan;
+    minumanRingan->next_sibling = minumanIsotonic;
+    
+    airMineral->parent = minuman;
+    minumanRingan->parent = minuman;
+    minumanIsotonic->parent = minuman;
+    
+    // ===== LEVEL 3 - Subkategori Alat Kebersihan =====
+    KategoriNode* deterjen = new KategoriNode("Deterjen & Pewangi", 3);
+    KategoriNode* pembersihLantai = new KategoriNode("Pembersih Lantai", 3);
+    
+    alatKebersihan->first_child = deterjen;
+    deterjen->next_sibling = pembersihLantai;
+    
+    deterjen->parent = alatKebersihan;
+    pembersihLantai->parent = alatKebersihan;
 }
 
-void tampilkan_kategori_tree(KategoriNode* node, string prefix = "", bool isLast = true) {
+// Menampilkan kategori dengan karakter ASCII standar (+, -, |)
+void tampilkan_kategori(KategoriNode* node, string prefix = "", bool isLast = true) {
     if (node == NULL) return;
     
+    // Cetak node saat ini
     cout << prefix;
-    cout << (isLast ? "└── " : "├── ");
-    cout << node->nama << " (" << node->kode_kat << ")" << endl;
     
-    string childPrefix = prefix + (isLast ? "    " : "│   ");
+    // Untuk root, tidak perlu garis
+    if (node->level == 0) {
+        cout << node->nama << " (" << node->kode_kat << ")" << endl;
+    } else {
+        cout << (isLast ? "+-- " : "+-- ");
+        cout << node->nama << " (" << node->kode_kat << ")" << endl;
+    }
     
+    // Siapkan prefix untuk anak-anak
+    string childPrefix = prefix;
+    if (node->level > 0) {
+        childPrefix += (isLast ? "    " : "|   ");
+    }
+    
+    // Rekursif ke anak-anak
     KategoriNode* child = node->first_child;
     while (child != NULL) {
         bool isLastChild = (child->next_sibling == NULL);
-        tampilkan_kategori_tree(child, childPrefix, isLastChild);
+        tampilkan_kategori(child, childPrefix, isLastChild);
         child = child->next_sibling;
     }
+}
+
+// Menampilkan kategori dengan indikator level (versi ASCII)
+void tampilkan_kategori_dengan_level(KategoriNode* node, int targetLevel = -1, string prefix = "", bool isLast = true) {
+    if (node == NULL) return;
+    
+    // Filter berdasarkan level jika targetLevel > 0
+    if (targetLevel == -1 || node->level <= targetLevel) {
+        if (node->level == 0) {
+            cout << node->nama << " (" << node->kode_kat << ") [Level " << node->level << "]" << endl;
+        } else {
+            cout << prefix;
+            cout << (isLast ? "+-- " : "+-- ");
+            cout << node->nama << " (" << node->kode_kat << ") [Level " << node->level << "]" << endl;
+        }
+    }
+    
+    // Siapkan prefix untuk anak-anak
+    string childPrefix = prefix;
+    if (node->level > 0) {
+        childPrefix += (isLast ? "    " : "|   ");
+    }
+    
+    // Rekursif ke anak-anak
+    KategoriNode* child = node->first_child;
+    while (child != NULL) {
+        bool isLastChild = (child->next_sibling == NULL);
+        tampilkan_kategori_dengan_level(child, targetLevel, childPrefix, isLastChild);
+        child = child->next_sibling;
+    }
+}
+
+// Mencari kategori berdasarkan nama
+KategoriNode* cari_kategori(KategoriNode* node, string nama) {
+    if (node == NULL) return NULL;
+    if (node->nama == nama) return node;
+    
+    KategoriNode* found = cari_kategori(node->first_child, nama);
+    if (found != NULL) return found;
+    
+    return cari_kategori(node->next_sibling, nama);
 }
 
 // Mencari kategori berdasarkan kode
@@ -394,7 +591,47 @@ KategoriNode* cari_kategori_by_kode(KategoriNode* node, string kode) {
     return cari_kategori_by_kode(node->next_sibling, kode);
 }
 
-// Mendapatkan path lengkap kategori (root > child > subchild)
+// Menambah kategori baru
+bool tambah_kategori(string nama_induk, string nama_baru) {
+    if (root_kat == NULL) {
+        cout << "Tree kategori belum diinisialisasi!\n";
+        return false;
+    }
+    
+    KategoriNode* parent = cari_kategori(root_kat, nama_induk);
+    if (parent == NULL) {
+        cout << "[X] Kategori induk '" << nama_induk << "' tidak ditemukan!\n";
+        return false;
+    }
+    
+    // Cek duplikat
+    KategoriNode* existing = parent->first_child;
+    while (existing != NULL) {
+        if (existing->nama == nama_baru) {
+            cout << "[X] Kategori '" << nama_baru << "' sudah ada di bawah '" << nama_induk << "'!\n";
+            return false;
+        }
+        existing = existing->next_sibling;
+    }
+    
+    KategoriNode* baru = new KategoriNode(nama_baru, parent->level + 1);
+    baru->parent = parent;
+    
+    if (parent->first_child == NULL) {
+        parent->first_child = baru;
+    } else {
+        KategoriNode* sibling = parent->first_child;
+        while (sibling->next_sibling != NULL) {
+            sibling = sibling->next_sibling;
+        }
+        sibling->next_sibling = baru;
+    }
+    
+    cout << "[OK] Kategori '" << nama_baru << "' berhasil ditambahkan di bawah '" << nama_induk << "' (Level " << baru->level << ")\n";
+    return true;
+}
+
+// Mendapatkan path lengkap kategori
 string get_kategori_path(KategoriNode* node) {
     if (node == NULL) return "";
     if (node->parent == NULL || node->nama == "SEMUA BARANG") 
@@ -403,61 +640,100 @@ string get_kategori_path(KategoriNode* node) {
     return get_kategori_path(node->parent) + " > " + node->nama;
 }
 
-// Menampilkan kategori berdasarkan level
-void tampilkan_kategori_by_level(KategoriNode* node, int targetLevel, int currentLevel = 0) {
-    if (node == NULL) return;
-    
-    if (currentLevel == targetLevel && node->nama != "SEMUA BARANG") {
-        string indent = "";
-        for (int i = 0; i < currentLevel; i++) indent += "  ";
-        cout << indent << "• " << node->nama << " (" << node->kode_kat << ")" << endl;
-    }
-    
-    tampilkan_kategori_by_level(node->first_child, targetLevel, currentLevel + 1);
-    tampilkan_kategori_by_level(node->next_sibling, targetLevel, currentLevel);
-}
-
+// Menampilkan semua leaf (versi ASCII)
 void tampilkan_leaf_kategori(KategoriNode* node) {
     if (node == NULL) return;
     
-    // Jika tidak punya anak dan bukan root, dia leaf
     if (node->first_child == NULL && node->nama != "SEMUA BARANG") {
-        cout << "  • " << get_kategori_path(node) << endl;
+        // Tampilkan dengan indentasi berdasarkan level
+        for (int i = 0; i < node->level; i++) {
+            cout << "  ";
+        }
+        cout << "- " << node->nama << " (" << node->kode_kat << ")" << endl;
+        cout << "  " << string(node->level * 2 + 2, ' ') << "  Path: " << get_kategori_path(node) << endl;
     }
     
     tampilkan_leaf_kategori(node->first_child);
     tampilkan_leaf_kategori(node->next_sibling);
 }
 
-void pilih_kategori_dari_tree(string &kategori_terpilih) {
-    cout << "\n=== DAFTAR KATEGORI (LEAF) ===\n";
-    cout << "(Hanya kategori paling bawah yang bisa dipilih)\n\n";
-    tampilkan_leaf_kategori(root_kat);
+// Menampilkan kategori berdasarkan level tertentu (versi ASCII)
+void tampilkan_kategori_by_level(KategoriNode* node, int targetLevel) {
+    if (node == NULL) return;
     
-    string input_kode;
-    bool found = false;
-    
-    while (!found) {
-        cout << "\nMasukkan KODE kategori yang dipilih: ";
-        cin >> input_kode;
-        
-        // Cari kategori berdasarkan kode
-        KategoriNode* kat = cari_kategori_by_kode(root_kat, input_kode);
-        
-        if (kat != NULL && kat->first_child == NULL) {
-            kategori_terpilih = kat->nama;
-            cout << "\n✓ Kategori terpilih: " << kategori_terpilih << " (" << kat->kode_kat << ")" << endl;
-            found = true;
-        } else if (kat != NULL && kat->first_child != NULL) {
-            cout << "\n✗ '" << kat->nama << "' BUKAN kategori leaf (masih memiliki subkategori)!" << endl;
-            cout << "  Silakan pilih kategori paling bawah (tidak memiliki anak).\n";
-        } else {
-            cout << "\n✗ Kode kategori '" << input_kode << "' tidak ditemukan!" << endl;
-            cout << "  Silakan masukkan kode yang benar dari daftar.\n";
+    if (node->level == targetLevel && node->nama != "SEMUA BARANG") {
+        string indent = "";
+        for (int i = 0; i < node->level; i++) {
+            indent += "  ";
         }
+        cout << indent << "+- " << node->nama << " (" << node->kode_kat << ")" << endl;
     }
+    
+    tampilkan_kategori_by_level(node->first_child, targetLevel);
+    tampilkan_kategori_by_level(node->next_sibling, targetLevel);
 }
 
+void tampilkan_leaf_kategori_table(KategoriNode* node) {
+    if (node == NULL) return;
+    
+    if (node->first_child == NULL && node->nama != "SEMUA BARANG") {
+        // Tampilkan kode dan nama kategori
+        cout << left << setw(10) << node->kode_kat << node->nama << endl;
+    }
+    
+    tampilkan_leaf_kategori_table(node->first_child);
+    tampilkan_leaf_kategori_table(node->next_sibling);
+}
+
+// Menampilkan hanya kategori leaf (terbawah) beserta kodenya
+void tampilkan_leaf_kategori_untuk_pemilihan() {
+    cout << "\n=== DAFTAR KATEGORI YANG DAPAT DIPILIH ===\n";
+    cout << "(Hanya kategori terbawah/leaf yang bisa dipilih)\n\n";
+    
+    // Tampilkan dalam format tabel yang rapi
+    cout << left << setw(10) << "KODE" << "NAMA KATEGORI" << endl;
+    cout << string(50, '-') << endl;
+    
+    tampilkan_leaf_kategori_table(root_kat);
+}
+
+// Fungsi untuk memilih kategori (hanya menampilkan leaf)
+string pilih_kategori_dari_tree() {
+    tampilkan_leaf_kategori_untuk_pemilihan();
+    
+    string kode_input;
+    KategoriNode* kategori_dipilih = NULL;
+    
+    while (true) {
+        cout << "\nMasukkan KODE kategori (contoh: KAT016): ";
+        getline(cin, kode_input);
+        
+        // Konversi ke uppercase
+        string kode_upper = kode_input;
+        for (int i = 0; i < kode_upper.length(); i++) {
+            kode_upper[i] = toupper(kode_upper[i]);
+        }
+        
+        kategori_dipilih = cari_kategori_by_kode(root_kat, kode_upper);
+        
+        if (kategori_dipilih == NULL) {
+            cout << "\n[X] Kode '" << kode_input << "' tidak ditemukan!\n";
+            cout << "    Silakan masukkan kode dari daftar di atas.\n";
+            continue;
+        }
+        
+        // Cek apakah leaf
+        if (kategori_dipilih->first_child != NULL) {
+            cout << "\n[X] '" << kategori_dipilih->nama << "' BUKAN kategori leaf!\n";
+            cout << "    Hanya kategori terbawah yang bisa dipilih.\n";
+            cout << "    Silakan pilih dari daftar yang tersedia.\n";
+            continue;
+        }
+        
+        cout << "\n[OK] Kategori terpilih: " << kategori_dipilih->nama << "\n";
+        return kategori_dipilih->nama;
+    }
+}
 // ============================================================
 // LOG BARANG
 // ============================================================
@@ -515,94 +791,159 @@ void tampilkan_log_barang() {
 // ============================================================
 // CRUD BARANG
 // ============================================================
+
 void tambah_barang() {
     bersihkan_layar();
+    cout << "=== TAMBAH BARANG ===\n";
     int jumlah;
+    string input;
     
-    cout << "Jumlah barang yang ingin di-input: ";
-    cin >> jumlah;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    
-    cout << "\n=== TAMBAH BARANG ===\n";
+    // Validasi jumlah barang (boleh 0 untuk kembali)
+    while (true) {
+        cout << "\nJumlah barang yang ingin di-input (ketik 0 untuk kembali): ";
+        getline(cin, input);
+        
+        if (input.empty()) {
+            cout << "Jumlah barang tidak boleh kosong!\n";
+            continue;
+        }
+        
+        bool valid = true;
+        for (int i = 0; i < input.length(); i++) {
+            if (!isdigit(input[i])) {
+                valid = false;
+                break;
+            }
+        }
+        
+        if (!valid) {
+            cout << "Jumlah barang harus berupa angka!\n";
+            continue;
+        }
+        
+        jumlah = atoi(input.c_str());
+        
+        // Jika user input 0, kembali ke menu utama
+        if (jumlah == 0) {
+            return;
+        }
+        
+        if (jumlah < 0) {
+            cout << "⚠ Jumlah barang tidak boleh negatif!\n";
+            continue;
+        }
+        
+        break;
+    }
     
     for (int i = 0; i < jumlah; i++) {
         Barang br;
-        cout << "\nMasukkan data ke-" << (i+1) << ": \n";
+        cout << "\n========== DATA KE-" << (i+1) << " ==========\n";
         
         br.id = next_id++;
         br.kode_barang = generate_kode_barang();
         
         cout << "Kode barang (otomatis): " << br.kode_barang << endl;
         
-        cout << "> Nama barang: "; 
-        getline(cin, br.nama);
-        while(br.nama.empty()) {
-            cout << "Nama tidak boleh kosong! Masukkan lagi: ";
+        // Validasi Nama Barang
+        while (true) {
+            cout << "> Nama barang: "; 
             getline(cin, br.nama);
+            
+            if (br.nama.empty()) {
+                cout << "Nama barang tidak boleh kosong!\n";
+                continue;
+            }
+            break;
         }
         
-        // Pilih kategori dari tree
-//        pilih_kategori_dari_tree(br.kategori);
+        // Pilih kategori dari tree 
+        br.kategori = pilih_kategori_dari_tree();
         
-        string input;
+        // Validasi Harga Beli
         while (true) {
             cout << "> Harga beli: ";
             getline(cin, input);
 
             if (input.empty()) {
-                cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+                cout << "Harga beli tidak boleh kosong!\n";
                 continue;
             }
 
             bool valid = true;
+            int titikCount = 0;
             for (int i = 0; i < input.length(); i++) {
-                if (!isdigit(input[i]) && input[i] != '.') {
-                    valid = false;
-                    break;
-                }	
+                if (!isdigit(input[i])) {
+                    if (input[i] == '.' && titikCount == 0) {
+                        titikCount++;
+                    } else {
+                        valid = false;
+                        break;
+                    }
+                }
             }
 
             if (!valid) {
-                cout << "Input harus angka! Masukkan lagi: \n";
+                cout << "Harga beli harus berupa angka (contoh: 10000 atau 10000.5)!\n";
                 continue;
             }
 
             br.harga_beli = atof(input.c_str());
+            if (br.harga_beli <= 0) {
+                cout << "Harga beli harus lebih dari 0!\n";
+                continue;
+            }
             break;
         }
         
+        // Validasi Harga Jual
         while (true) {
             cout << "> Harga jual: ";
             getline(cin, input);
 
             if (input.empty()) {
-                cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+                cout << "Harga jual tidak boleh kosong!\n";
                 continue;
             }
 
             bool valid = true;
+            int titikCount = 0;
             for (int i = 0; i < input.length(); i++) {
-                if (!isdigit(input[i]) && input[i] != '.') {
-                    valid = false;
-                    break;
-                }	
+                if (!isdigit(input[i])) {
+                    if (input[i] == '.' && titikCount == 0) {
+                        titikCount++;
+                    } else {
+                        valid = false;
+                        break;
+                    }
+                }
             }
 
             if (!valid) {
-                cout << "Input harus angka! Masukkan lagi: \n";
+                cout << "Harga jual harus berupa angka (contoh: 15000 atau 15000.5)!\n";
                 continue;
             }
 
             br.harga_jual = atof(input.c_str());
+            if (br.harga_jual <= 0) {
+                cout << "Harga jual harus lebih dari 0!\n";
+                continue;
+            }
+            
+            if (br.harga_jual < br.harga_beli) {
+                cout << "Harga jual tidak boleh kurang dari harga beli (Rp" << fixed << setprecision(0) << br.harga_beli << ")!\n";
+                continue;
+            }
             break;
         }
         
+        // Validasi Stok (WAJIB MINIMAL 1, TIDAK BOLEH 0)
         while (true) {
-            cout << "> Stok awal: ";
+            cout << "> Stok awal (minimal 1): ";
             getline(cin, input);
 
             if (input.empty()) {
-                cout << "Input tidak boleh kosong! Masukkan lagi: \n";
+                cout << "Stok tidak boleh kosong!\n";
                 continue;
             }
 
@@ -612,48 +953,93 @@ void tambah_barang() {
                     valid = false;
                     break;
                 }
-            }	
+            }
 
             if (!valid) {
-                cout << "Input harus angka! Masukkan lagi: \n";
+                cout << "⚠ Stok harus berupa angka!\n";
                 continue;
             }
 
             br.stok = atoi(input.c_str());
+            
+            // STOK DILARANG 0
+            if (br.stok == 0) {
+                cout << "Stok tidak boleh 0! Minimal stok adalah 1.\n";
+                cout << "   (Jika ingin stok kosong, bisa diupdate kemudian)\n";
+                continue;
+            }
+            
+            if (br.stok < 0) {
+                cout << "Stok tidak boleh negatif!\n";
+                continue;
+            }
             break;
         }
-                
-        cout << "> Satuan [Enter jika pcs]: "; 
-        getline(cin, br.satuan);
-        if(br.satuan.empty()) br.satuan = "pcs";
         
-        cout << "> Tanggal kadaluarsa (DD-MM-YYYY) [Enter jika tidak ada]: ";
-        getline(cin, br.tanggal_kadaluarsa);
-
-        if(br.tanggal_kadaluarsa.empty()) {
-            br.tanggal_kadaluarsa = "-";
-        } else {
-            while(true) {
-                if(!is_valid_date_format(br.tanggal_kadaluarsa)) {
-                    cout << "Format tanggal salah! Gunakan DD-MM-YYYY: ";
-                } else if(!is_future_date(br.tanggal_kadaluarsa)) {
-                    cout << "Tanggal tidak boleh kurang dari hari ini! Masukkan lagi: ";
-                } else {
+        // Validasi Satuan
+        while (true) {
+            cout << "> Satuan (pcs, kg, liter, dll): ";
+            getline(cin, br.satuan);
+            
+            if (br.satuan.empty()) {
+                cout << "Satuan tidak boleh kosong! (contoh: pcs, kg, liter)\n";
+                continue;
+            }
+            
+            bool valid = true;
+            for (int i = 0; i < br.satuan.length(); i++) {
+                if (!isalpha(br.satuan[i]) && br.satuan[i] != ' ') {
+                    valid = false;
                     break;
                 }
-                getline(cin, br.tanggal_kadaluarsa);
             }
+            
+            if (!valid) {
+                cout << "Satuan harus berupa huruf! (contoh: pcs, kg, liter)\n";
+                continue;
+            }
+            break;
         }
         
-        cout << "> Supplier [Enter jika tidak ada]: "; 
-        getline(cin, br.supplier);
-        if(br.supplier.empty()) br.supplier = "-";
+        // Validasi Tanggal Kadaluarsa
+        while (true) {
+            cout << "> Tanggal kadaluarsa (DD-MM-YYYY) [Enter jika tidak ada]: ";
+            getline(cin, br.tanggal_kadaluarsa);
+
+            if (br.tanggal_kadaluarsa.empty()) {
+                br.tanggal_kadaluarsa = "-";
+                break;
+            }
+            
+            if (!is_valid_date_format(br.tanggal_kadaluarsa)) {
+                cout << "Format tanggal salah! Gunakan DD-MM-YYYY (contoh: 31-12-2025)\n";
+                continue;
+            }
+            
+            if (!is_future_date(br.tanggal_kadaluarsa)) {
+                cout << "Tanggal kadaluarsa tidak boleh kurang dari hari ini!\n";
+                continue;
+            }
+            break;
+        }
+        
+        // Validasi Supplier
+        while (true) {
+            cout << "> Supplier (ketik '-' jika tidak ada): ";
+            getline(cin, br.supplier);
+            
+            if (br.supplier.empty()) {
+                cout << "Supplier tidak boleh kosong!\n";
+                continue;
+            }
+            break;
+        }
         
         NodeBarang* new_node = new NodeBarang();
         new_node->data = br;
         new_node->next = NULL;
         
-        if(is_kosong()) {
+        if (is_kosong()) {
             head = new_node;
             tail = new_node;
         } else {
@@ -661,55 +1047,140 @@ void tambah_barang() {
             tail = new_node;
         }
 
-        tambah_log("Tambah Barang", "Kode: " + new_node->data.kode_barang + " | Nama: " + new_node->data.nama + " | Kategori: " + new_node->data.kategori);
+        tambah_log("Tambah Barang", "Kode: " + new_node->data.kode_barang + " | Nama: " + new_node->data.nama + " | Stok: " + to_string(new_node->data.stok));
         
-        cout << "\n[Barang ke-" << (i+1) << " berhasil ditambahkan!]" << endl;
-        cout << "\n" << string(100, '-') << endl;
+        cout << "\nBarang ke-" << (i+1) << " berhasil ditambahkan!" << endl;
+        cout << string(50, '-') << endl;
+    }
+    
+    cout << "\nSemua (" << jumlah << ") barang berhasil ditambahkan!\n";
+}
+
+void tampilkan_barang_dengan_filter(int filter_by);
+void tampilkan_barang();
+
+void tampilkan_barang() {
+    bersihkan_layar();  // <-- TAMBAHKAN INI agar layar bersih
+    
+    if (is_kosong()) {
+        cout << "List Barang kosong." << endl;
+        cout << "\nTekan ENTER untuk kembali...";
+        cin.get();
+        return;
+    }
+
+    // Tampilkan semua barang terlebih dahulu
+    cout << "\n=== DAFTAR BARANG ===\n";
+    cout << string(148, '=') << endl;
+    cout << left << setw(5)  << "No"
+         << setw(12) << "Kode"
+         << setw(20) << "Nama"
+         << setw(25) << "Kategori (Kode)"
+         << setw(12) << "Hrg Beli"
+         << setw(12) << "Hrg Jual"
+         << setw(8)  << "Stok"
+         << setw(10) << "Satuan"
+         << setw(15) << "Expired"
+         << "Supplier" << endl;
+    cout << string(148, '-') << endl;
+
+    NodeBarang* current = head;
+    int no = 1;
+
+    while (current != NULL) {
+        string kode_kat = "-";
+        KategoriNode* kat = cari_kategori(root_kat, current->data.kategori);
+        if (kat != NULL) {
+            kode_kat = kat->kode_kat;
+        }
+        
+        cout << left << setw(5)  << no++
+             << setw(12) << current->data.kode_barang
+             << setw(20) << current->data.nama
+             << setw(25) << (current->data.kategori + " (" + kode_kat + ")")
+             << setw(12) << fixed << setprecision(0) << current->data.harga_beli
+             << setw(12) << current->data.harga_jual
+             << setw(8)  << current->data.stok
+             << setw(10) << current->data.satuan
+             << setw(15) << current->data.tanggal_kadaluarsa
+             << current->data.supplier << endl;
+        current = current->next; 
+    }
+    
+    cout << string(148, '=') << endl;
+    
+    // Tampilkan menu filter
+    cout << "\n=== FILTER BARANG ===\n";
+    cout << "1. Filter berdasarkan Kategori\n";
+    cout << "2. Filter berdasarkan Nama Barang\n";
+    cout << "3. Filter berdasarkan Stok (<= nilai tertentu)\n";
+    cout << "4. Filter berdasarkan Stok (>= nilai tertentu)\n";
+    cout << "5. Filter berdasarkan Harga Jual (<= nilai tertentu)\n";
+    cout << "6. Filter berdasarkan Harga Jual (>= nilai tertentu)\n";
+    cout << "7. Filter berdasarkan Supplier\n";
+    cout << "8. Tampilkan barang yang akan kadaluarsa (<= 30 hari)\n";
+    cout << "0. Kembali\n";
+    cout << "Pilih filter: ";
+    
+    int pilih_filter;
+    cin >> pilih_filter;
+    cin.ignore();
+    
+    if (pilih_filter == 0) {
+        return;
+    } else if (pilih_filter >= 1 && pilih_filter <= 8) {
+        tampilkan_barang_dengan_filter(pilih_filter);
+    } else {
+        cout << "\n[ERROR] Pilihan tidak valid!\n";
     }
 }
 
-void tampilkan_barang_dengan_filter() {
+void tampilkan_barang_dengan_filter(int filter_by) {
+    // HAPUS bersihkan_layar() di sini agar output tetap berurutan
+    // Tapi filter kategori perlu case insensitive
+    
     if (is_kosong()) {
         cout << "List Barang kosong." << endl;
         return;
     }
     
-    int filter_by;
     string filter_value;
     NodeBarang* current = head;
     int no = 1;
     bool found = false;
     
-    cout << "\n=== FILTER BARANG ===\n";
-    cout << "1. Tampilkan semua barang\n";
-    cout << "2. Filter berdasarkan Kategori\n";
-    cout << "3. Filter berdasarkan Nama Barang\n";
-    cout << "4. Filter berdasarkan Stok (<= nilai tertentu)\n";
-    cout << "5. Filter berdasarkan Stok (>= nilai tertentu)\n";
-    cout << "6. Filter berdasarkan Harga Jual (<= nilai tertentu)\n";
-    cout << "7. Filter berdasarkan Harga Jual (>= nilai tertentu)\n";
-    cout << "8. Filter berdasarkan Supplier\n";
-    cout << "9. Tampilkan barang yang akan kadaluarsa (<= 30 hari)\n";
-    cout << "Pilih filter: ";
-    cin >> filter_by;
-    cin.ignore();
-    
-    // Handle filter 9 (kadaluarsa) tanpa input nilai tambahan
-    if (filter_by == 9) {
-        // Tidak perlu input nilai, langsung proses
-    }
-    // Handle filter lainnya yang perlu input nilai
-    else if (filter_by != 1) {
-        if (filter_by == 2) cout << "Masukkan nama kategori: ";
-        else if (filter_by == 3) cout << "Masukkan nama barang: ";
-        else if (filter_by == 4 || filter_by == 5) cout << "Masukkan nilai stok: ";
-        else if (filter_by == 6 || filter_by == 7) cout << "Masukkan nilai harga: ";
-        else if (filter_by == 8) cout << "Masukkan nama supplier: ";
+    // Handle input nilai filter sesuai jenisnya
+    if (filter_by >= 1 && filter_by <= 7) {
+        if (filter_by == 1) {
+            cout << "\n=== DAFTAR KATEGORI YANG DAPAT DIPILIH ===\n";
+            cout << "(Hanya kategori terbawah/leaf yang bisa dipilih)\n\n";
+            cout << left << setw(12) << "KODE" << "NAMA KATEGORI" << endl;
+            cout << string(50, '-') << endl;
+            tampilkan_leaf_kategori_table(root_kat);
+            cout << string(50, '-') << endl;
+            cout << "\nMasukkan KODE kategori (case insensitive): ";
+        }
+        else if (filter_by == 2) cout << "\nMasukkan nama barang: ";
+        else if (filter_by == 3 || filter_by == 4) cout << "\nMasukkan nilai stok: ";
+        else if (filter_by == 5 || filter_by == 6) cout << "\nMasukkan nilai harga: ";
+        else if (filter_by == 7) cout << "\nMasukkan nama supplier: ";
         
         getline(cin, filter_value);
+        
+        // Untuk filter kategori, konversi input ke UPPERCASE agar match dengan kode di tree
+        if (filter_by == 1) {
+            for (int i = 0; i < filter_value.length(); i++) {
+                filter_value[i] = toupper(filter_value[i]);
+            }
+        }
+        
+        if (filter_value.empty() && filter_by != 1) {
+            cout << "[ERROR] Input tidak boleh kosong!\n";
+            return;
+        }
     }
     
-    // Konversi ke lowercase untuk filter
+    // Untuk filter nama, supplier (case insensitive)
     string filter_lower = toLowerCase(filter_value);
     
     cout << "\n=== HASIL FILTER BARANG ===\n";
@@ -717,7 +1188,7 @@ void tampilkan_barang_dengan_filter() {
     cout << left << setw(5)  << "No"
          << setw(12) << "Kode"
          << setw(20) << "Nama"
-         << setw(15) << "Kategori"
+         << setw(25) << "Kategori (Kode)"
          << setw(12) << "Hrg Beli"
          << setw(12) << "Hrg Jual"
          << setw(8)  << "Stok"
@@ -729,70 +1200,70 @@ void tampilkan_barang_dengan_filter() {
     current = head;
     no = 1;
     
-    // Dapatkan tanggal sekarang untuk filter kadaluarsa
     time_t t = time(0);
     tm* now = localtime(&t);
-    int curr_d = now->tm_mday;
-    int curr_m = now->tm_mon + 1;
-    int curr_y = now->tm_year + 1900;
     
     while (current != NULL) {
         bool tampil = false;
         
         switch(filter_by) {
-            case 1: // Tampilkan semua
-                tampil = true;
-                break;
-                
-            case 2: // Filter kategori
-                if (toLowerCase(current->data.kategori) == filter_lower) {
-                    tampil = true;
+            case 1: { // Filter kategori berdasarkan KODE (case insensitive sudah di-uppercase)
+                // Cari kategori berdasarkan kode (case sensitive sudah di-handle)
+                KategoriNode* kat = cari_kategori_by_kode(root_kat, filter_value);
+                if (kat != NULL) {
+                    // Bandingkan nama kategori (bukan kode) karena di barang tersimpan nama
+                    if (toLowerCase(current->data.kategori) == toLowerCase(kat->nama)) {
+                        tampil = true;
+                    }
+                } else {
+                    cout << "\n[ERROR] Kode kategori '" << filter_value << "' tidak ditemukan!\n";
+                    return;
                 }
                 break;
+            }
                 
-            case 3: // Filter nama (contains)
+            case 2: // Filter nama (contains)
                 if (toLowerCase(current->data.nama).find(filter_lower) != string::npos) {
                     tampil = true;
                 }
                 break;
                 
-            case 4: // Filter stok <=
+            case 3: // Filter stok <=
                 if (current->data.stok <= atoi(filter_value.c_str())) {
                     tampil = true;
                 }
                 break;
                 
-            case 5: // Filter stok >=
+            case 4: // Filter stok >=
                 if (current->data.stok >= atoi(filter_value.c_str())) {
                     tampil = true;
                 }
                 break;
                 
-            case 6: // Filter harga jual <=
+            case 5: // Filter harga jual <=
                 if (current->data.harga_jual <= atof(filter_value.c_str())) {
                     tampil = true;
                 }
                 break;
                 
-            case 7: // Filter harga jual >=
+            case 6: // Filter harga jual >=
                 if (current->data.harga_jual >= atof(filter_value.c_str())) {
                     tampil = true;
                 }
                 break;
                 
-            case 8: // Filter supplier
+            case 7: // Filter supplier
                 if (toLowerCase(current->data.supplier) == filter_lower) {
                     tampil = true;
                 }
                 break;
                 
-            case 9: { // Filter kadaluarsa <= 30 hari
+            case 8: { // Filter kadaluarsa <= 30 hari
                 if (current->data.tanggal_kadaluarsa != "-") {
                     int d = atoi(current->data.tanggal_kadaluarsa.substr(0,2).c_str());
                     int m = atoi(current->data.tanggal_kadaluarsa.substr(3,2).c_str());
                     int y = atoi(current->data.tanggal_kadaluarsa.substr(6,4).c_str());
                     
-                    // Hitung selisih hari
                     tm expire_tm = {0};
                     expire_tm.tm_mday = d;
                     expire_tm.tm_mon = m - 1;
@@ -810,15 +1281,21 @@ void tampilkan_barang_dengan_filter() {
             }
             
             default:
-                tampil = true;
+                tampil = false;
                 break;
         }
         
         if (tampil) {
+            string kode_kat = "-";
+            KategoriNode* kat = cari_kategori(root_kat, current->data.kategori);
+            if (kat != NULL) {
+                kode_kat = kat->kode_kat;
+            }
+            
             cout << left << setw(5)  << no++
                  << setw(12) << current->data.kode_barang
                  << setw(20) << current->data.nama
-                 << setw(15) << current->data.kategori
+                 << setw(25) << (current->data.kategori + " (" + kode_kat + ")")
                  << setw(12) << fixed << setprecision(0) << current->data.harga_beli
                  << setw(12) << current->data.harga_jual
                  << setw(8)  << current->data.stok
@@ -836,87 +1313,18 @@ void tampilkan_barang_dengan_filter() {
     }
     
     cout << string(148, '=') << endl;
-}
-
-void tampilkan_barang() {
-    while (true) {
-        bersihkan_layar();
-
-        if (is_kosong()) {
-            cout << "List Barang kosong." << endl;
-            cout << "\nTekan ENTER untuk kembali...";
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cin.get();
-            return;
-        }
-
-        int pilih;
-
-        cout << "\n=== MENU TAMPILAN BARANG ===\n";
-        cout << "1. Tampilkan semua barang\n";
-        cout << "2. Tampilkan dengan filter\n";
-        cout << "0. Kembali\n";
-        cout << "Pilih: ";
-        cin >> pilih;
-        cin.ignore();
-
-        if (pilih == 0) {
-            return;
-        }
-
-        else if (pilih == 1) {
-            cout << "\n=== DAFTAR BARANG ===" << endl;
-            cout << string(148, '=') << endl;
-
-            cout << left << setw(5)  << "No"
-                 << setw(12) << "Kode"
-                 << setw(20) << "Nama"
-                 << setw(15) << "Kategori"
-                 << setw(12) << "Hrg Beli"
-                 << setw(12) << "Hrg Jual"
-                 << setw(8)  << "Stok"
-                 << setw(10) << "Satuan"
-                 << setw(15) << "Expired"
-                 << "Supplier" << endl;
-
-            cout << string(148, '-') << endl;
-
-            NodeBarang* current = head;
-            int no = 1;
-
-            while (current != NULL) {
-                cout << left << setw(5)  << no++
-                     << setw(12) << current->data.kode_barang
-                     << setw(20) << current->data.nama
-                     << setw(15) << current->data.kategori
-                     << setw(12) << current->data.harga_beli
-                     << setw(12) << current->data.harga_jual
-                     << setw(8)  << current->data.stok
-                     << setw(10) << current->data.satuan
-                     << setw(15) << current->data.tanggal_kadaluarsa
-                     << current->data.supplier << endl;
-
-                current = current->next;
-            }
-
-            cout << string(148, '=') << endl;
-
-            cout << "\nTekan ENTER untuk kembali...";
-            cin.get();
-        }
-
-        else if (pilih == 2) {
-            tampilkan_barang_dengan_filter();
-
-            cout << "\nTekan ENTER untuk kembali...";
-            cin.get();
-        }
-
-        else {
-            cout << "\nPilihan tidak valid!";
-            cout << "\nTekan ENTER untuk coba lagi...";
-            cin.get();
-        }
+    
+    cout << "\n1. Filter lagi\n";
+    cout << "0. Kembali ke daftar barang\n";
+    cout << "Pilih: ";
+    int pilih_lagi;
+    cin >> pilih_lagi;
+    cin.ignore();
+    
+    if (pilih_lagi == 1) {
+        tampilkan_barang();
+    } else {
+        tampilkan_barang();
     }
 }
 
@@ -1690,81 +2098,6 @@ void cari_barang_customer() {
     if (!ditemukan) {
         cout << "\nBarang tidak ditemukan.\n";
     }
-}
-
-// Menampilkan kategori (preorder traversal dengan indikator garis)
-void tampilkan_kategori(KategoriNode* node, string prefix = "", bool isLast = true) {
-    if (node == NULL) return;
-    
-    // Cetak node saat ini
-    cout << prefix;
-    cout << (isLast ? "+-- " : "+-- ");
-    cout << node->nama << " (" << node->kode_kat << ")" << endl;
-    
-    // Siapkan prefix untuk anak-anak
-    string childPrefix = prefix + (isLast ? "    " : "¦   ");
-    
-    // Rekursif ke anak-anak (first_child dan next_sibling-nya)
-    KategoriNode* child = node->first_child;
-    while (child != NULL) {
-        bool isLastChild = (child->next_sibling == NULL);
-        tampilkan_kategori(child, childPrefix, isLastChild);
-        child = child->next_sibling;
-    }
-}
-
-// Mencari kategori berdasarkan nama (dengan path lengkap)
-KategoriNode* cari_kategori(KategoriNode* node, string nama) {
-    if (node == NULL) return NULL;
-    if (node->nama == nama) return node;
-    
-    // Cari di anak
-    KategoriNode* found = cari_kategori(node->first_child, nama);
-    if (found != NULL) return found;
-    
-    // Cari di saudara
-    return cari_kategori(node->next_sibling, nama);
-}
-
-// Menambah kategori baru di bawah kategori induk
-bool tambah_kategori(string nama_induk, string nama_baru) {
-    if (root_kat == NULL) {
-        cout << "Tree kategori belum diinisialisasi!\n";
-        return false;
-    }
-    
-    KategoriNode* parent = cari_kategori(root_kat, nama_induk);
-    if (parent == NULL) {
-        cout << "Kategori induk '" << nama_induk << "' tidak ditemukan!\n";
-        return false;
-    }
-    
-    // Cek apakah nama sudah ada di level yang sama
-    KategoriNode* existing = parent->first_child;
-    while (existing != NULL) {
-        if (existing->nama == nama_baru) {
-            cout << "Kategori '" << nama_baru << "' sudah ada di bawah '" << nama_induk << "'!\n";
-            return false;
-        }
-        existing = existing->next_sibling;
-    }
-    
-    KategoriNode* baru = new KategoriNode(nama_baru, parent->level + 1);
-    baru->parent = parent;
-    
-    // Tambahkan sebagai anak terakhir
-    if (parent->first_child == NULL) {
-        parent->first_child = baru;
-    } else {
-        KategoriNode* sibling = parent->first_child;
-        while (sibling->next_sibling != NULL) {
-            sibling = sibling->next_sibling;
-        }
-        sibling->next_sibling = baru;
-    }
-    
-    cout << "Kategori '" << nama_baru << "' berhasil ditambahkan di bawah '" << nama_induk << "'\n";
-    return true;
 }
 
 // ===============================
