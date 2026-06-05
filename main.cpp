@@ -2002,7 +2002,7 @@ void menu_customer() {
         cout << "3. Tambah Keranjang" << endl;
         cout << "4. Tampilkan Keranjang" << endl;
         cout << "5. Hapus Keranjang" << endl;
-        cout << "6. CHECKOUT PESANAN (Rafa)" << endl; // Mengaktifkan menu checkout Rafa
+        cout << "6. Checkout Pesanan" << endl; // Mengaktifkan menu checkout Rafa
         cout << "7. Riwayat Pembelian & Status" << endl;
         cout << "0. Logout" << endl;
         cout << "-----------------------------------------\n";
