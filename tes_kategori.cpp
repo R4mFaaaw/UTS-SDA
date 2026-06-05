@@ -141,7 +141,7 @@ void tampilkan_kategori(KategoriNode* node, string prefix = "", bool isLast = tr
     cout << node->nama << " (" << node->kode_kategori << ")" << endl;
     
     // Siapkan prefix untuk anak-anak
-    string childPrefix = prefix + (isLast ? "    " : "¦   ");
+    string childPrefix = prefix + (isLast ? "    " : "Â¦   ");
     
     // Rekursif ke anak-anak (firstChild dan nextSibling-nya)
     KategoriNode* child = node->firstChild;
@@ -232,7 +232,7 @@ void tampilkan_leaf_kategori(KategoriNode* node) {
     
     // Jika tidak punya anak dan bukan root, dia leaf
     if (node->firstChild == NULL && node->nama != "SEMUA BARANG") {
-        cout << "  • " << get_kategori_path(node) << endl;
+        cout << "  â€¢ " << get_kategori_path(node) << endl;
     }
     
     tampilkan_leaf_kategori(node->firstChild);
@@ -246,7 +246,7 @@ void tampilkan_kategori_by_level(KategoriNode* node, int targetLevel, int curren
     if (currentLevel == targetLevel && node->nama != "SEMUA BARANG") {
         string indent = "";
         for (int i = 0; i < currentLevel; i++) indent += "  ";
-        cout << indent << "• " << node->nama << " (" << node->kode_kategori << ")" << endl;
+        cout << indent << "â€¢ " << node->nama << " (" << node->kode_kategori << ")" << endl;
     }
     
     tampilkan_kategori_by_level(node->firstChild, targetLevel, currentLevel + 1);
